@@ -1,30 +1,38 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 
 {
-  # https://devenv.sh/languages/
-  # Replaces the old flake.nix mkShell (nodejs_22 + pnpm +
-  # nodePackages.typescript/typescript-language-server, the latter removed
-  # upstream in nixpkgs: `nodePackages has been removed`).
-  languages.javascript = {
-    enable = true;
-    package = pkgs.nodejs_22;
-    pnpm = {
-      enable = true;
-      # Repo pins pnpm@10 via `packageManager`; keep Nix pnpm on v10.
-      package = pkgs.pnpm_10;
-      install.enable = true;
-    };
-  };
-
+  # Vite+ owns the project runtime and package manager.
   languages.typescript.enable = true;
+  languages.nix.enable = true;
+  languages.shell.enable = true;
+
+  packages = with pkgs; [
+    vscode-langservers-extracted
+    tailwindcss-language-server
+    yaml-language-server
+    nixfmt
+  ];
 
   # https://devenv.sh/basics/
   enterShell = ''
-    export PATH="$PWD/node_modules/.bin:$PATH"
+    export PATH=${lib.escapeShellArg "${config.devenv.root}/node_modules/.bin:${config.devenv.root}/apps/web/node_modules/.bin"}:$PATH
     echo "Rick and Morty Platform dev environment"
-    echo "  Node: $(node --version)"
-    echo "  pnpm: $(pnpm --version)"
-    echo "Run 'pnpm install' first if not done yet"
+    if command -v vp >/dev/null 2>&1; then
+      echo "  Vite+: $(command -v vp)"
+    else
+      echo "Vite+ (vp) is missing. Install it with the official installer:"
+      echo "  curl -fsSL https://vite.plus | bash"
+      echo "Open a new shell after installation. See https://viteplus.dev/guide/"
+    fi
+    echo "  TypeScript language server: $(command -v typescript-language-server)"
+    echo "  Nix language server: $(command -v nixd)"
+    echo "  Shell language server: $(command -v bash-language-server)"
+    echo "Run 'pnpm install' to install project dependencies."
   '';
 
   # https://devenv.sh/tasks/
@@ -40,6 +48,6 @@
   };
 
   # https://devenv.sh/processes/
-  # `devenv up` starts the Vite dev server (`pnpm dev`).
+  # Run `devenv up` from inside the flake shell.
   processes.dev.exec = "pnpm dev";
 }
