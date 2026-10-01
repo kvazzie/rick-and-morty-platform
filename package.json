@@ -10,7 +10,8 @@
     "lint": "pnpm --filter @rick-and-morty-platform/web lint",
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
-    "test": "pnpm --filter @rick-and-morty-platform/web test",
+    "test": "pnpm test:environment",
+    "test:environment": "bash scripts/test-environment.sh",
     "preview": "pnpm --filter @rick-and-morty-platform/web preview",
     "prepare": "husky"
   },
