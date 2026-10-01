@@ -29,9 +29,9 @@
       echo "  curl -fsSL https://vite.plus | bash"
       echo "Open a new shell after installation. See https://viteplus.dev/guide/"
     fi
-    echo "  TypeScript language server: $(command -v typescript-language-server)"
-    echo "  Nix language server: $(command -v nixd)"
-    echo "  Shell language server: $(command -v bash-language-server)"
+    echo "  TypeScript language server: $(command -v typescript-language-server || echo missing)"
+    echo "  Nix language server: $(command -v nixd || echo missing)"
+    echo "  Shell language server: $(command -v bash-language-server || echo missing)"
     echo "Run 'pnpm install' to install project dependencies."
   '';
 
