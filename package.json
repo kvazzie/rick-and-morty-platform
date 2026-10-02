@@ -4,16 +4,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @rick-and-morty-platform/web dev",
-    "generate-pwa-assets": "pnpm --filter @rick-and-morty-platform/web generate-pwa-assets",
-    "build": "pnpm --filter @rick-and-morty-platform/web build",
-    "lint": "pnpm --filter @rick-and-morty-platform/web lint",
-    "fmt": "oxfmt --write .",
-    "fmt:check": "oxfmt --check .",
-    "test": "pnpm test:environment",
+    "dev": "vp run --filter @rick-and-morty-platform/web dev",
+    "generate-pwa-assets": "vp run --filter @rick-and-morty-platform/web generate-pwa-assets",
+    "build": "vp run -r build",
+    "lint": "vp lint",
+    "fmt": "vp fmt",
+    "fmt:check": "vp fmt --check",
+    "test": "vp run --no-cache test:application && vp run --no-cache test:environment",
     "test:environment": "bash scripts/test-environment.sh",
-    "preview": "pnpm --filter @rick-and-morty-platform/web preview",
-    "prepare": "husky"
+    "preview": "vp run --filter @rick-and-morty-platform/web preview",
+    "prepare": "vp config --hooks-dir .vite-hooks --no-agent",
+    "check": "vp check",
+    "typecheck": "vp check --no-fmt --no-lint",
+    "test:application": "vp run --no-cache --filter @rick-and-morty-platform/web test",
+    "test:unit": "vp run --no-cache --filter @rick-and-morty-platform/web test:unit",
+    "test:integration": "vp run --no-cache --filter @rick-and-morty-platform/web test:integration",
+    "test:storybook": "vp run --no-cache --filter @rick-and-morty-platform/web test:storybook",
+    "test:watch": "vp run --no-cache --filter @rick-and-morty-platform/web test:watch",
+    "test:coverage": "vp run --no-cache --filter @rick-and-morty-platform/web test:coverage",
+    "storybook": "vp run --filter @rick-and-morty-platform/web storybook",
+    "storybook:build": "vp run --filter @rick-and-morty-platform/web storybook:build"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.0",
@@ -22,9 +32,11 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.8",
     "@semantic-release/npm": "^13.1.5",
-    "husky": "^9.1.7",
-    "oxfmt": "^0.57.0",
-    "semantic-release": "^25.0.5"
+    "semantic-release": "^25.0.5",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": "^22.22.1"
   },
   "packageManager": "pnpm@10.29.3"
 }

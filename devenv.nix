@@ -20,7 +20,8 @@
 
   # https://devenv.sh/basics/
   enterShell = ''
-    export PATH=${lib.escapeShellArg "${config.devenv.root}/node_modules/.bin:${config.devenv.root}/apps/web/node_modules/.bin"}:$PATH
+    # Keep the global vp ahead of the project CLI, which has no runtime manager.
+    export PATH=$PATH:${lib.escapeShellArg "${config.devenv.root}/node_modules/.bin:${config.devenv.root}/apps/web/node_modules/.bin"}
     echo "Rick and Morty Platform dev environment"
     if command -v vp >/dev/null 2>&1; then
       echo "  Vite+: $(command -v vp)"
@@ -32,22 +33,25 @@
     echo "  TypeScript language server: $(command -v typescript-language-server || echo missing)"
     echo "  Nix language server: $(command -v nixd || echo missing)"
     echo "  Shell language server: $(command -v bash-language-server || echo missing)"
-    echo "Run 'pnpm install' to install project dependencies."
+    echo "Run 'vp install' to install project dependencies."
   '';
 
   # https://devenv.sh/tasks/
-  # Mirrors root package.json scripts (`pnpm <name>` stays canonical).
+  # Vite+ owns project commands and the workspace task graph.
   tasks = {
-    "platform:dev".exec = "pnpm dev";
-    "platform:build".exec = "pnpm build";
-    "platform:lint".exec = "pnpm lint";
-    "platform:fmt".exec = "pnpm fmt";
-    "platform:test".exec = "pnpm test";
-    "platform:preview".exec = "pnpm preview";
-    "platform:generate-pwa-assets".exec = "pnpm generate-pwa-assets";
+    "platform:dev".exec = "vp run dev";
+    "platform:build".exec = "vp run build";
+    "platform:check".exec = "vp check";
+    "platform:lint".exec = "vp run lint";
+    "platform:typecheck".exec = "vp run typecheck";
+    "platform:fmt".exec = "vp run fmt";
+    "platform:test".exec = "vp run test";
+    "platform:coverage".exec = "vp run test:coverage";
+    "platform:preview".exec = "vp run preview";
+    "platform:generate-pwa-assets".exec = "vp run generate-pwa-assets";
   };
 
   # https://devenv.sh/processes/
   # Run `devenv up` from inside the flake shell.
-  processes.dev.exec = "pnpm dev";
+  processes.dev.exec = "vp run dev";
 }

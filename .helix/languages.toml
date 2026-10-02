@@ -3,39 +3,39 @@ command = "typescript-language-server"
 args = ["--stdio"]
 
 [language-server.oxlint]
-command = "oxlint"
-args = ["--lsp"]
+command = "vp"
+args = ["lint", "--lsp"]
 
 [[language]]
 name = "typescript"
 language-servers = ["tsserver", "oxlint"]
 auto-format = true
-formatter = { command = "oxfmt", args = ["--stdin-filepath", "file.ts"] }
+formatter = { command = "vp", args = ["fmt", "--stdin-filepath", "file.ts"] }
 
 [[language]]
 name = "tsx"
 language-servers = ["tsserver", "oxlint"]
 auto-format = true
-formatter = { command = "oxfmt", args = ["--stdin-filepath", "file.tsx"] }
+formatter = { command = "vp", args = ["fmt", "--stdin-filepath", "file.tsx"] }
 
 [[language]]
 name = "javascript"
 language-servers = ["tsserver", "oxlint"]
 auto-format = true
-formatter = { command = "oxfmt", args = ["--stdin-filepath", "file.js"] }
+formatter = { command = "vp", args = ["fmt", "--stdin-filepath", "file.js"] }
 
 [[language]]
 name = "jsx"
 language-servers = ["tsserver", "oxlint"]
 auto-format = true
-formatter = { command = "oxfmt", args = ["--stdin-filepath", "file.jsx"] }
+formatter = { command = "vp", args = ["fmt", "--stdin-filepath", "file.jsx"] }
 
 [[language]]
 name = "json"
 auto-format = true
-formatter = { command = "oxfmt", args = ["--stdin-filepath", "file.json"] }
+formatter = { command = "vp", args = ["fmt", "--stdin-filepath", "file.json"] }
 
 [[language]]
 name = "markdown"
 auto-format = true
-formatter = { command = "oxfmt", args = ["--stdin-filepath", "file.md"] }
+formatter = { command = "vp", args = ["fmt", "--stdin-filepath", "file.md"] }
