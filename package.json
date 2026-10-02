@@ -10,12 +10,20 @@
     "lint": "vp lint",
     "fmt": "vp fmt",
     "fmt:check": "vp fmt --check",
-    "test": "pnpm test:environment",
+    "test": "vp run --no-cache test:application && vp run --no-cache test:environment",
     "test:environment": "bash scripts/test-environment.sh",
     "preview": "vp run --filter @rick-and-morty-platform/web preview",
     "prepare": "vp config --hooks-dir .vite-hooks --no-agent",
     "check": "vp check",
-    "typecheck": "vp check --no-fmt --no-lint"
+    "typecheck": "vp check --no-fmt --no-lint",
+    "test:application": "vp run --no-cache --filter @rick-and-morty-platform/web test",
+    "test:unit": "vp run --no-cache --filter @rick-and-morty-platform/web test:unit",
+    "test:integration": "vp run --no-cache --filter @rick-and-morty-platform/web test:integration",
+    "test:storybook": "vp run --no-cache --filter @rick-and-morty-platform/web test:storybook",
+    "test:watch": "vp run --no-cache --filter @rick-and-morty-platform/web test:watch",
+    "test:coverage": "vp run --no-cache --filter @rick-and-morty-platform/web test:coverage",
+    "storybook": "vp run --filter @rick-and-morty-platform/web storybook",
+    "storybook:build": "vp run --filter @rick-and-morty-platform/web storybook:build"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.0",

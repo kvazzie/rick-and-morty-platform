@@ -45,3 +45,8 @@ devenv.local.yaml
 # Vite+ task cache and generated hook dispatcher
 .vite/
 .vite-hooks/_/
+
+# Generated test reports and Storybook artifacts
+coverage/
+storybook-static/
+test-results/

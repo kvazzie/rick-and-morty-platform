@@ -55,6 +55,10 @@ The root provides `build`, `check`, `lint`, `typecheck`, `fmt`, `fmt:check`, `te
 `generate-pwa-assets` commands through `vp run <name>`. Application commands select the web workspace,
 so contributors do not need to change directories. `vp check` runs formatting, type-aware linting with
 warnings denied, and type checking. `vp run typecheck` runs only the type-check portion.
+
+`vp run test` runs Vitest unit and integration tests, Storybook browser component tests, and the Devenv environment suite.
+Use `vp run test:coverage` for coverage reports, `vp run storybook` for the component workshop, and
+`vp run storybook:build` for its static build. See [TESTING.md](TESTING.md) for conventions, focused commands, and Chromium setup.
 Inside the shell, `devenv up` starts the development server, and `devenv tasks run platform:build` runs
 the workspace build task. Entering the shell does not install dependencies or run project checks.
 

@@ -45,7 +45,8 @@
     "platform:lint".exec = "vp run lint";
     "platform:typecheck".exec = "vp run typecheck";
     "platform:fmt".exec = "vp run fmt";
-    "platform:test".exec = "pnpm test";
+    "platform:test".exec = "vp run test";
+    "platform:coverage".exec = "vp run test:coverage";
     "platform:preview".exec = "vp run preview";
     "platform:generate-pwa-assets".exec = "vp run generate-pwa-assets";
   };
