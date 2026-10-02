@@ -26,8 +26,9 @@ The flake declares Devenv's public binary cache. To accept those cache settings 
 `nix develop --accept-flake-config --impure`.
 
 The shell supplies TypeScript/JavaScript, HTML/CSS/JSON, Tailwind CSS, YAML, Nix, and shell language servers,
-plus TypeScript, Nix formatting, and ShellCheck. The Helix configuration uses the project's `oxlint` and
-`oxfmt` after dependency installation. Vite+ supplies the project runtime and package manager. If `vp` is
+plus TypeScript, Nix formatting, and ShellCheck. The Helix configuration uses `vp lint` and `vp fmt`
+after dependency installation. The shell keeps the global `vp` ahead of project binaries so that
+`vp env` remains available. Vite+ supplies the project runtime and package manager. If `vp` is
 missing, shell startup prints the [official installation recommendation](https://viteplus.dev/guide/):
 
 ```sh
@@ -38,18 +39,50 @@ Open a new shell after installation. Follow the
 [live Nixpkgs Vite+ packaging search](https://github.com/NixOS/nixpkgs/issues?q=%22vite%2B%22)
 for native packaging progress.
 
-During the toolchain migration, use Node 22 and the pinned `pnpm@10.29.3`. Install dependencies, then run
-commands from the repository root:
+Vite+ selects Node 22 from `.node-version` and the pinned `pnpm@10.29.3` from `package.json`.
+Node 22.22.1 or later in the 22.x line supports staged checks. Enable Vite+'s environment management,
+then install dependencies and run commands from the repository root:
 
 ```sh
-pnpm install
-pnpm dev
+vp env on
+vp env current
+vp install
+vp run dev
 ```
 
-The root also provides `build`, `lint`, `fmt`, `fmt:check`, `test`, `preview`, and `generate-pwa-assets` commands.
-Application commands select the web workspace, so contributors do not need to change directories.
+Use `vp install --frozen-lockfile` in a clean checkout to reproduce the committed dependencies.
+The root provides `build`, `check`, `lint`, `typecheck`, `fmt`, `fmt:check`, `test`, `preview`, and
+`generate-pwa-assets` commands through `vp run <name>`. Application commands select the web workspace,
+so contributors do not need to change directories. `vp check` runs formatting, type-aware linting with
+warnings denied, and type checking. `vp run typecheck` runs only the type-check portion.
 Inside the shell, `devenv up` starts the development server, and `devenv tasks run platform:build` runs
-the existing build task. Entering the shell does not install dependencies or run project checks.
+the workspace build task. Entering the shell does not install dependencies or run project checks.
+
+## Tasks and hooks
+
+The root `vite.config.ts` owns formatting, linting, type-check options, and staged checks. Workspace
+configs own their application builds. `vp run build` selects workspace build tasks, which build their
+workspace dependencies first. Tasks declared in `run.tasks` use Vite+'s cache by default. Repeated builds
+reuse outputs when their inputs match, including restoring deleted build output. Use
+`vp run --no-cache build` to force a build and `vp run --last-details` to inspect task and cache results.
+
+Installation runs `vp config --hooks-dir .vite-hooks --no-agent` to set up Vite+'s Git hook dispatcher. The committed
+`.vite-hooks/pre-commit` runs `vp staged`, and `.vite-hooks/commit-msg` invokes the local Commitlint
+configuration through `vp exec`. Generated dispatcher files stay untracked. Check hook state with
+`vp hooks status`; `vp hooks disable` and `vp hooks enable` change it for this clone.
+
+If an existing clone still points to `.husky/_`, switch its dispatcher once:
+
+```sh
+vp hooks disable
+vp hooks enable --hooks-dir .vite-hooks
+```
+
+Hooks provide local feedback. Full checks run directly through the project commands regardless of hook
+state. Authoritative GitHub Actions and branch protection are tracked in
+[issue #14](https://github.com/kvazzie/rick-and-morty-platform/issues/14). Existing application lint and
+type errors remain visible during the migration; the application baseline work is tracked in
+[issue #12](https://github.com/kvazzie/rick-and-morty-platform/issues/12).
 
 ## Releases
 

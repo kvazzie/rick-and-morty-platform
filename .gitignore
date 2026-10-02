@@ -41,3 +41,7 @@ devenv.local.yaml
 # If this project later owns a skill, unignore it explicitly:
 # !.agents/skills/my-skill/
 # !.agents/skills/my-skill/**
+
+# Vite+ task cache and generated hook dispatcher
+.vite/
+.vite-hooks/_/
