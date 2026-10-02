@@ -64,8 +64,8 @@ the workspace build task. Entering the shell does not install dependencies or ru
 
 ## React runtime
 
-React and React DOM use the same exact Canary build, `19.3.0-canary-278794d7-20261002`.
-Their TypeScript configurations load the Canary API declarations. Upgrade the runtime packages together.
+React and React DOM use the same exact stable release, `19.3.0`, with matching stable
+TypeScript declarations. Upgrade the runtime packages together.
 
 React Compiler 1.0.0 runs in the application and Storybook through plugin-react 6's
 `reactCompilerPreset` and `@rolldown/plugin-babel`. The compiler uses `panicThreshold: 'all_errors'`
