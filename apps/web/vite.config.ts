@@ -27,16 +27,9 @@ export default defineConfig({
             ],
             runtimeCaching: [
               {
-                urlPattern: ({ url, request }) => {
+                urlPattern: ({ url }) => {
                   const isApi = url.origin === 'https://rickandmortyapi.com' && url.pathname.startsWith('/api/');
                   const isMedia = url.pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|mp4|mp3|wav)$/i);
-                  console.log('workbox', { url, request });
-                  console.log({
-                    isApi,
-                    isMedia,
-                    result: isApi && !isMedia,
-                  });
-
                   return isApi && !isMedia;
                 },
                 handler: 'NetworkFirst',
