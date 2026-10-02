@@ -1,14 +1,15 @@
 import { startTransition, useState } from 'react';
 import { getItems } from '../../api';
 import type { Category, PaginatedResponse } from '../../types';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 export function useItems<T extends Category>(
   category: T,
   setHistory: (items: PaginatedResponse<T>) => void
 ): [Promise<PaginatedResponse<T>>, () => void] {
   const navigate = useNavigate();
-  const pageNum = Number(window.location.hash.replace('#', '') ?? 0);
+  const { hash } = useLocation();
+  const pageNum = Number(hash.replace('#', ''));
 
   function incrementPage() {
     navigate(`#${pageNum + 1}`, { replace: true });
