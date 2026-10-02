@@ -1,7 +1,8 @@
 import type { StorybookConfig } from '@storybook/react-vite';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
+import babel from '@rolldown/plugin-babel';
 import { mergeConfig } from 'vite-plus';
 
 const config: StorybookConfig = {
@@ -18,7 +19,7 @@ const config: StorybookConfig = {
   },
   viteFinal: (config) =>
     mergeConfig(config, {
-      plugins: [react(), tailwindcss()],
+      plugins: [react(), babel({ presets: [reactCompilerPreset({ panicThreshold: 'all_errors' })] }), tailwindcss()],
       define: { 'import.meta.vitest': 'undefined' },
     }),
 };

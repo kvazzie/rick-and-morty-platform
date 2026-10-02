@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite-plus';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 export default defineConfig({
   lint: {
@@ -14,6 +15,12 @@ export default defineConfig({
       {
         files: ['apps/web/**/*.{ts,tsx}'],
         rules: {
+          ...Object.fromEntries(
+            Object.keys(reactHooks.configs.recommended.rules).map((rule) => [
+              rule.replace('react-hooks/', 'react-compiler/'),
+              'error',
+            ])
+          ),
           'constructor-super': 'off',
           'for-direction': 'error',
           'getter-return': 'off',
@@ -116,6 +123,10 @@ export default defineConfig({
       denyWarnings: true,
     },
     jsPlugins: [
+      {
+        name: 'react-compiler',
+        specifier: 'eslint-plugin-react-hooks',
+      },
       {
         name: 'vite-plus',
         specifier: 'vite-plus/oxlint-plugin',

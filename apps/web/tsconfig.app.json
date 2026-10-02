@@ -23,7 +23,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "types": ["vite-plus/client", "vite-plus/test/importMeta", "react/experimental", "react-dom/experimental"]
+    "types": ["vite-plus/client", "vite-plus/test/importMeta", "react/canary", "react-dom/canary"]
   },
   "include": ["src", ".storybook/preview.ts"]
 }

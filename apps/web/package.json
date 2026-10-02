@@ -30,12 +30,13 @@
     "@heroui/tooltip": "^2.2.22",
     "@tailwindcss/vite": "^4.3.2",
     "framer-motion": "^12.23.12",
-    "react": "0.0.0-experimental-a96a0f39-20250815",
-    "react-dom": "0.0.0-experimental-a96a0f39-20250815",
+    "react": "19.3.0-canary-278794d7-20261002",
+    "react-dom": "19.3.0-canary-278794d7-20261002",
     "react-router": "^7.8.1",
     "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
+    "@rolldown/plugin-babel": "0.2.4",
     "@storybook/addon-vitest": "10.6.1",
     "@storybook/react-vite": "10.6.1",
     "@types/react": "^19.1.10",
@@ -45,6 +46,7 @@
     "@vitest/browser": "5.0.1",
     "@vitest/browser-playwright": "5.0.1",
     "@vitest/coverage-v8": "5.0.1",
+    "babel-plugin-react-compiler": "1.0.0",
     "playwright": "1.63.0",
     "storybook": "10.6.1",
     "typescript": "~5.8.3",

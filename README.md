@@ -62,6 +62,23 @@ Use `vp run test:coverage` for coverage reports, `vp run storybook` for the comp
 Inside the shell, `devenv up` starts the development server, and `devenv tasks run platform:build` runs
 the workspace build task. Entering the shell does not install dependencies or run project checks.
 
+## React runtime
+
+React and React DOM use the same exact Canary build, `19.3.0-canary-278794d7-20261002`.
+Their TypeScript configurations load the Canary API declarations. Upgrade the runtime packages together.
+
+React Compiler 1.0.0 runs in the application and Storybook through plugin-react 6's
+`reactCompilerPreset` and `@rolldown/plugin-babel`. The compiler uses `panicThreshold: 'all_errors'`
+so compilation diagnostics fail the build. Type-aware `vp lint` and `vp check` run the official
+`eslint-plugin-react-hooks` recommended rules as errors under the `react-compiler` alias.
+This includes compiler diagnostics that would otherwise skip optimization.
+
+React Router retains the existing routes and navigation behavior. React View Transitions wrap
+route content and asynchronous list content, and character images keep matching names between
+their cards and detail pages. Pagination updates use `startTransition`. The CSS
+`prefers-reduced-motion: reduce` override removes View Transition animations while keeping the same
+navigation and content. Browsers without the View Transition API render the same content normally.
+
 ## Tasks and hooks
 
 `.editorconfig` owns indentation, line endings, final newlines, and line width. The root `vite.config.ts`

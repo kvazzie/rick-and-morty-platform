@@ -1,17 +1,17 @@
 import { useItem } from '../hooks/useItem';
-import type { Category, Item, Character, Episode, Location } from '../types';
-import { unstable_ViewTransition as ViewTransition } from 'react';
+import type { Category, Item } from '../types';
+import { ViewTransition } from 'react';
 import { routesMap } from '../utils';
 
-function isCharacter(item: Item): item is Character {
+function isCharacter(item: Item): item is Item<'character'> {
   return 'image' in item;
 }
 
-function isLocation(item: Item): item is Location {
+function isLocation(item: Item): item is Item<'location'> {
   return 'dimension' in item;
 }
 
-function isEpisode(item: Item): item is Episode {
+function isEpisode(item: Item): item is Item<'episode'> {
   return 'episode' in item;
 }
 
@@ -23,7 +23,6 @@ const DetailItem = ({ label, value }: { label: string; value: string }) => (
 );
 
 export const ItemDetailContent = ({ category, id }: { category: Category; id: string }) => {
-
   const item = useItem(routesMap[category], id);
 
   return (

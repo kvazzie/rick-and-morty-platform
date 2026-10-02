@@ -1,20 +1,20 @@
-import { useMemo } from "react";
+import { useEffect, useEffectEvent, useRef } from 'react';
 
-export function useIntersectionObserver(
-  callback: ConstructorParameters<typeof IntersectionObserver>[0],
-  _: object, 
-  deps: any[] = [],
+export function useIntersectionObserver<T extends HTMLElement>(
+  callback: IntersectionObserverCallback,
+  page: Promise<unknown>
 ) {
-  const observer = useMemo(() => {
-    const observer = new IntersectionObserver(callback);
-    return {
-      observer,
-      observe: (element: HTMLElement) => 
-        observer.observe(element),
-      unobserve: (element: HTMLElement) => 
-        observer.unobserve(element),
-    }
-  }, deps);
+  const ref = useRef<T>(null);
+  const onIntersection = useEffectEvent(callback);
 
-  return observer;
+  useEffect(() => {
+    const target = ref.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(onIntersection);
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [page]);
+
+  return ref;
 }
