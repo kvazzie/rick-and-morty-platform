@@ -64,8 +64,11 @@ the workspace build task. Entering the shell does not install dependencies or ru
 
 ## Tasks and hooks
 
-The root `vite.config.ts` owns formatting, linting, type-check options, and staged checks. Workspace
-configs own their application builds. `vp run build` selects workspace build tasks, which build their
+`.editorconfig` owns indentation, line endings, final newlines, and line width. The root `vite.config.ts`
+keeps formatter settings that EditorConfig cannot express for Oxfmt, plus linting, type-check options,
+and staged checks. Oxfmt does not read `quote_type`, so `fmt.singleQuote` preserves single quotes.
+The web lint override uses the built-in browser environment for its globals. Workspace configs own
+their application builds. `vp run build` selects workspace build tasks, which build their
 workspace dependencies first. Tasks declared in `run.tasks` use Vite+'s cache by default. Repeated builds
 reuse outputs when their inputs match, including restoring deleted build output. Use
 `vp run --no-cache build` to force a build and `vp run --last-details` to inspect task and cache results.
