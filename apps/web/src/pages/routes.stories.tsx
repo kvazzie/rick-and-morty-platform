@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { expect, fn, spyOn } from 'storybook/test';
 import { routes } from './routes';
+import { Layout } from '../components/Layout';
+import { NotFoundPage } from './NotFoundPage';
 
 let finishLoading = () => {};
 
@@ -15,8 +17,24 @@ const rick = {
   image: '/pwa-192x192.png',
 };
 
+function RenderingFailure(): never {
+  throw new TypeError('Rendering failed');
+}
+
 function PublicRoutes({ initialPath }: { initialPath: string }) {
-  const [router] = useState(() => createMemoryRouter(routes, { initialEntries: [initialPath] }));
+  const [router] = useState(() =>
+    createMemoryRouter(
+      [
+        ...routes,
+        {
+          path: '/render-failure',
+          element: <Layout />,
+          children: [{ index: true, Component: RenderingFailure, ErrorBoundary: NotFoundPage }],
+        },
+      ],
+      { initialEntries: [initialPath] }
+    )
+  );
   useEffect(() => () => router.dispose(), [router]);
   return <RouterProvider router={router} />;
 }
@@ -157,4 +175,12 @@ export const RemovedSignup: Story = {
 export const UnknownCategory: Story = {
   args: { initialPath: '/unknown' },
   play: RemovedLogin.play,
+};
+
+export const RenderingError: Story = {
+  args: { initialPath: '/render-failure' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('heading', { name: '404' })).toBeVisible();
+    await expect(canvas.queryByText(/Check your connection/)).not.toBeInTheDocument();
+  },
 };

@@ -1,11 +1,12 @@
 import { Link as RouterLink, useRouteError } from 'react-router';
 import { usePreviousPath } from '../hooks/usePreviousPath';
 import { Link } from '@heroui/link';
+import { RequestError } from '../api';
 
 export const NotFoundPage = () => {
   const err = useRouteError();
   const { previousPath } = usePreviousPath();
-  const requestFailed = err instanceof Error && (err instanceof TypeError || err.message.startsWith('Failed to fetch'));
+  const requestFailed = err instanceof RequestError;
 
   return (
     <div

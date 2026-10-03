@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vite-plus/test';
-import { getItem, getItems } from './index';
+import { getItem, getItems, RequestError } from './index';
 
 it('returns character data and pagination from the public API', async () => {
   vi.stubGlobal('fetch', async (url: string) =>
@@ -45,17 +45,35 @@ it('returns the requested character detail', async () => {
 it('rejects a failed listing request', async () => {
   vi.stubGlobal('fetch', async () => new Response(null, { status: 500 }));
 
-  await expect(getItems('location')).rejects.toThrow('Failed to fetch location');
+  const request = getItems('location');
+  await expect(request).rejects.toBeInstanceOf(RequestError);
+  await expect(request).rejects.toThrow('Failed to fetch location');
 });
 
 it('rejects a missing character detail', async () => {
   vi.stubGlobal('fetch', async () => new Response(null, { status: 404 }));
 
-  await expect(getItem('character', '999')).rejects.toThrow('Failed to fetch character with id 999');
+  const request = getItem('character', '999');
+  await expect(request).rejects.toBeInstanceOf(RequestError);
+  await expect(request).rejects.toThrow('Failed to fetch character with id 999');
+});
+
+it('rejects a detail request when the network is unavailable', async () => {
+  const failure = new TypeError('Network unavailable');
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(failure));
+
+  const request = getItem('character', '1');
+  await expect(request).rejects.toBeInstanceOf(RequestError);
+  await expect(request).rejects.toThrow('Network unavailable');
+  await expect(request).rejects.toHaveProperty('cause', failure);
 });
 
 it('rejects a listing request when the network is unavailable', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Network unavailable')));
+  const failure = new TypeError('Network unavailable');
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(failure));
 
-  await expect(getItems('episode')).rejects.toThrow('Network unavailable');
+  const request = getItems('episode');
+  await expect(request).rejects.toBeInstanceOf(RequestError);
+  await expect(request).rejects.toThrow('Network unavailable');
+  await expect(request).rejects.toHaveProperty('cause', failure);
 });
