@@ -67,11 +67,13 @@ the workspace build task. Entering the shell does not install dependencies or ru
 React and React DOM use the same exact stable release, `19.3.0`, with matching stable
 TypeScript declarations. Upgrade the runtime packages together.
 
-React Compiler 1.0.0 runs in the application and Storybook through plugin-react 6's
-`reactCompilerPreset` and `@rolldown/plugin-babel`. The compiler uses `panicThreshold: 'all_errors'`
-so compilation diagnostics fail the build. Type-aware `vp lint` and `vp check` run the official
-`eslint-plugin-react-hooks` recommended rules as errors under the `react-compiler` alias.
-This includes compiler diagnostics that would otherwise skip optimization.
+React Compiler runs in the application and Storybook through plugin-react 6.1's native Oxc
+integration and `oxc-transform-react`, with `target: '19'` and `panicThreshold: 'all_errors'`.
+Compilation diagnostics fail the build. This compiler integration is experimental and uses no
+Babel compiler plugin. Type-aware `vp lint` and `vp check` run Oxlint's native recommended compiler
+diagnostics, including `react/unsupported-syntax`, plus the hooks and effect-dependency rules as
+errors. Oxc does not implement the upstream `config` and `gating` lint rules because its lint
+compiler options are fixed and it does not expose gating.
 
 React Router retains the existing routes and navigation behavior. React View Transitions wrap
 route content and asynchronous list content, and character images keep matching names between

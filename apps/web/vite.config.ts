@@ -2,8 +2,7 @@ import { coverageConfigDefaults, defaultExclude, defineConfig, lazyPlugins } fro
 import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from 'vite-plus/test/browser-playwright';
-import react, { reactCompilerPreset } from '@vitejs/plugin-react';
-import babel from '@rolldown/plugin-babel';
+import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { pwaAssets } from './pwa-assets.config';
@@ -17,8 +16,7 @@ export default defineConfig({
   plugins: process.env.VITEST
     ? []
     : lazyPlugins(() => [
-        react(),
-        babel({ presets: [reactCompilerPreset({ panicThreshold: 'all_errors' })] }),
+        react({ compiler: { target: '19', panicThreshold: 'all_errors' } }),
         tailwindcss(),
         VitePWA({
           workbox: {

@@ -121,7 +121,7 @@ by Git. No initial global or per-file thresholds are set. Changes to scope or th
 `apps/web/vite.config.ts` holds separate `unit`, `integration`, and `storybook` projects and shared coverage settings. The
 Storybook project has an isolated configuration. The application PWA plugins are omitted during tests, and Storybook
 loads its own React and Tailwind plugins without the app's service worker. Application and Storybook builds use the same
-React Compiler preset and fail on compiler diagnostics. `.storybook/main.ts` defines discovery and
+native Oxc React Compiler options and fail on compiler diagnostics. `.storybook/main.ts` defines discovery and
 builder options, `.storybook/vite.config.ts` isolates the builder from the app configuration, and
 `.storybook/preview.ts` imports the application styles.
 
