@@ -18,7 +18,7 @@ const config: StorybookConfig = {
   },
   viteFinal: (config) =>
     mergeConfig(config, {
-      plugins: [react(), tailwindcss()],
+      plugins: [react({ compiler: { target: '19', panicThreshold: 'all_errors' } }), tailwindcss()],
       define: { 'import.meta.vitest': 'undefined' },
     }),
 };

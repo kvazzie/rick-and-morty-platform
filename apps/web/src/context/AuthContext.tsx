@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, use, useMemo } from 'react';
+import React, { createContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -15,13 +15,8 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
   const navigate = useNavigate();
-
-  const loggedInStatus = localStorage.getItem('isLoggedIn');
-  useMemo(() => {
-    setIsLoggedIn(loggedInStatus === 'true');
-  }, [loggedInStatus]);
 
   const login = () => {
     localStorage.setItem('isLoggedIn', 'true');
@@ -34,9 +29,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     navigate('/login');
   };
 
-  return (
-    <AuthContext value={{ isLoggedIn, login, logout }}>
-      {children}
-    </AuthContext>
-  );
+  return <AuthContext value={{ isLoggedIn, login, logout }}>{children}</AuthContext>;
 };

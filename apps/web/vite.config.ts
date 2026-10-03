@@ -16,7 +16,7 @@ export default defineConfig({
   plugins: process.env.VITEST
     ? []
     : lazyPlugins(() => [
-        react(),
+        react({ compiler: { target: '19', panicThreshold: 'all_errors' } }),
         tailwindcss(),
         VitePWA({
           workbox: {

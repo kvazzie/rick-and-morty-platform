@@ -62,6 +62,25 @@ Use `vp run test:coverage` for coverage reports, `vp run storybook` for the comp
 Inside the shell, `devenv up` starts the development server, and `devenv tasks run platform:build` runs
 the workspace build task. Entering the shell does not install dependencies or run project checks.
 
+## React runtime
+
+React and React DOM use the same exact stable release, `19.3.0`, with matching stable
+TypeScript declarations. Upgrade the runtime packages together.
+
+React Compiler runs in the application and Storybook through plugin-react 6.1's native Oxc
+integration and `oxc-transform-react`, with `target: '19'` and `panicThreshold: 'all_errors'`.
+Compilation diagnostics fail the build. This compiler integration is experimental and uses no
+Babel compiler plugin. Type-aware `vp lint` and `vp check` run Oxlint's native recommended compiler
+diagnostics, including `react/unsupported-syntax`, plus the hooks and effect-dependency rules as
+errors. Oxc does not implement the upstream `config` and `gating` lint rules because its lint
+compiler options are fixed and it does not expose gating.
+
+React Router retains the existing routes and navigation behavior. React View Transitions wrap
+route content and asynchronous list content, and character images keep matching names between
+their cards and detail pages. Pagination updates use `startTransition`. The CSS
+`prefers-reduced-motion: reduce` override removes View Transition animations while keeping the same
+navigation and content. Browsers without the View Transition API render the same content normally.
+
 ## Tasks and hooks
 
 `.editorconfig` owns indentation, line endings, final newlines, and line width. The root `vite.config.ts`

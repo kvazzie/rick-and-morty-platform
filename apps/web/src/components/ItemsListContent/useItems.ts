@@ -1,92 +1,89 @@
-
-import { useEffect, useMemo, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import { getItems } from '../../api';
-import type { Category, Item, PaginatedResponse } from '../../types';
-import { useNavigate } from 'react-router';
+import type { Category, PaginatedResponse } from '../../types';
+import { useLocation, useNavigate } from 'react-router';
 
 export function useItems<T extends Category>(
   category: T,
-  setHistory: (items: PaginatedResponse<T>) => void, 
+  setHistory: (items: PaginatedResponse<T>) => void
 ): [Promise<PaginatedResponse<T>>, () => void] {
   const navigate = useNavigate();
-  let pageNum = Number(
-    window.location.hash.replace('#', '') ?? 
-    0
-  );
+  const { hash, key } = useLocation();
+  const activeLocation = useRef<object | null>(null);
+  useEffect(() => {
+    activeLocation.current = {};
+    return () => {
+      activeLocation.current = null;
+    };
+  }, [key]);
+  const parsed = Number(hash.replace('#', ''));
+  const pageNum = Math.max(0, (Number.isSafeInteger(parsed) && parsed) || 0);
 
   function incrementPage() {
     navigate(`#${pageNum + 1}`, { replace: true });
   }
 
-  // console.log('after useItems pageNum: ', pageNum);
-  const f = useMemo(() => 
-    (console.log('recreate'), createAsyncGenerator(category, pageNum + 1, setHistory)), 
-    []
+  // The keyed list owns one pagination iterator for its lifetime.
+  const [pages] = useState(() => createAsyncGenerator(category, pageNum + 1, setHistory));
+
+  const [currentPage, setCurrentPage] = useState<Promise<PaginatedResponse<T>>>(() =>
+    pages.next().then((result) => result.value)
   );
 
-  const [currentPage, setCurrentPage] = 
-    useState<Promise<PaginatedResponse<T>>>((console.log("init state"), () => f.next().then($ => $.value)));
-
   return [
-    currentPage, 
-    () => setCurrentPage(async $ => {
-      incrementPage();
-
-      const r = await f.next()
-
-      if (!r.done || r.value)
-        return r.value
-      return $;
-    }),
+    currentPage,
+    () => {
+      const location = activeLocation.current;
+      // The browser entry can change before a deferred router render commits.
+      const url = window.location.href;
+      const historyKey = window.history.state?.key;
+      const request = pages
+        .next()
+        .then((result) => result.value ?? Promise.reject(new Error('Pagination returned no page')))
+        .then((page) => {
+          if (
+            location !== null &&
+            activeLocation.current === location &&
+            window.location.href === url &&
+            window.history.state?.key === historyKey
+          )
+            incrementPage();
+          return page;
+        })
+        .catch(() => currentPage);
+      startTransition(() => setCurrentPage(request));
+    },
   ];
-} 
+}
 
 async function* createAsyncGenerator<T extends Category>(
-  category: T, 
+  category: T,
   initNum: number,
-  saveHistory: (items: PaginatedResponse<T>) => void,
+  saveHistory: (items: PaginatedResponse<T>) => void
 ): AsyncGenerator<PaginatedResponse<T>, PaginatedResponse<T>, unknown> {
-
-  type CurryGetItems = (index: Parameters<typeof getItems>[1]) => 
-    Promise<PaginatedResponse<T>>;
-  const curryGetItems: CurryGetItems = (index) => 
-    getItems(category, index);
+  type CurryGetItems = (index: Parameters<typeof getItems>[1]) => Promise<PaginatedResponse<T>>;
+  const curryGetItems: CurryGetItems = (index) => getItems(category, index);
 
   let lastHandled: PaginatedResponse<T>;
 
   {
-    console.log(initNum);
-    const requests = Array.from(
-      { length: initNum }, 
-      (_, index) => curryGetItems(index + 1)
-    );
+    const requests = Array.from({ length: initNum }, (_, index) => curryGetItems(index + 1));
     const lastEl = requests.pop()!;
 
-    yield* iterateQueueWithLazyEffects(requests, async $ => {
-      saveHistory(await $)
-    });
-    
+    for (const request of requests) {
+      const page = await request;
+      yield page;
+      saveHistory(page);
+    }
+
     lastHandled = await lastEl;
-    console.log('after initial requests', lastHandled);
   }
 
-   while (lastHandled.info.next !== null) {
-    yield (console.log('yield'), lastHandled);
-    const request = curryGetItems(lastHandled.info.next);
+  while (lastHandled.info.next !== null) {
+    yield lastHandled;
+    const nextPage = await curryGetItems(lastHandled.info.next);
     saveHistory(lastHandled);
-    lastHandled = await request;
-  };
-  return lastHandled;
-}
-
-async function* iterateQueueWithLazyEffects<T extends Array<any>> (
-  queue: T, 
-  effect?: (item: T[number], index: number) => void,
-) {
-  console.log('enter into iterateQueueWithLazyEffects', queue.length);
-  for (let i = 0; i < queue.length; ++i) {
-    yield queue[i];
-    if (effect) 
-      effect(queue[i], i);
+    lastHandled = nextPage;
   }
+  return lastHandled;
 }
