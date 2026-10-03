@@ -1,4 +1,4 @@
-import { startTransition, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import { getItems } from '../../api';
 import type { Category, PaginatedResponse } from '../../types';
 import { useLocation, useNavigate } from 'react-router';
@@ -8,7 +8,14 @@ export function useItems<T extends Category>(
   setHistory: (items: PaginatedResponse<T>) => void
 ): [Promise<PaginatedResponse<T>>, () => void] {
   const navigate = useNavigate();
-  const { hash } = useLocation();
+  const { hash, key } = useLocation();
+  const activeLocation = useRef<object | null>(null);
+  useEffect(() => {
+    activeLocation.current = {};
+    return () => {
+      activeLocation.current = null;
+    };
+  }, [key]);
   const parsed = Number(hash.replace('#', ''));
   const pageNum = Math.max(0, (Number.isSafeInteger(parsed) && parsed) || 0);
 
@@ -26,11 +33,21 @@ export function useItems<T extends Category>(
   return [
     currentPage,
     () => {
+      const location = activeLocation.current;
+      // The browser entry can change before a deferred router render commits.
+      const url = window.location.href;
+      const historyKey = window.history.state?.key;
       const request = pages
         .next()
         .then((result) => result.value ?? Promise.reject(new Error('Pagination returned no page')))
         .then((page) => {
-          incrementPage();
+          if (
+            location !== null &&
+            activeLocation.current === location &&
+            window.location.href === url &&
+            window.history.state?.key === historyKey
+          )
+            incrementPage();
           return page;
         })
         .catch(() => currentPage);
