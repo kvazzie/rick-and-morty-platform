@@ -3,6 +3,10 @@
 Rick and Morty Platform is a private TypeScript monorepo. The existing React PWA lives in the
 `@rick-and-morty-platform/web` workspace under `apps/web`.
 
+Visitors can browse characters, locations, and episodes without an account. List and detail routes use client-side
+navigation. Requests show loading indicators and visible failure messages, including when an additional page cannot load.
+The application has no login or signup flow and does not use local storage for authentication.
+
 ## Workspaces
 
 - `apps/web` contains the Rick and Morty Viewer application.

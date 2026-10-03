@@ -1,16 +1,13 @@
-
 import { useParams } from 'react-router';
 import { ItemsListContent } from '../components/ItemsListContent';
-import { isValidCategory, routesMap } from '../utils';
+import { isValidCategory } from '../utils';
 
 export const ItemsListPage = () => {
   const { category } = useParams<{ category: string }>();
 
-  if (!category)
-    throw new Error('Category is required');
+  if (!category) throw new Error('Category is required');
 
-  if (!isValidCategory(category))
-    throw new Error('Category is not valid');
+  if (!isValidCategory(category)) throw new Error('Category is not valid');
 
   return (
     <div>

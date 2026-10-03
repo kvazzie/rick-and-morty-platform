@@ -8,7 +8,7 @@ import { routesMap } from '../../utils';
 
 export function ItemsListContent<T extends Category>({ category }: { category: T }) {
   const [history, setHistory] = useState<PaginatedResponse<Category>[]>([]);
-  const [items, nextItems] = useItems(routesMap[category], (news) =>
+  const [items, nextItems, loadFailed] = useItems(routesMap[category], (news) =>
     startTransition(() => setHistory((currents) => [...currents, news]))
   );
 
@@ -27,6 +27,11 @@ export function ItemsListContent<T extends Category>({ category }: { category: T
           <LastBlock promise={items} category={category} nextItems={nextItems} />
         </Suspense>
       </ViewTransition>
+      {loadFailed && (
+        <p role="alert" className="col-span-full text-center text-red-300">
+          Couldn't load more items. Check your connection and try again later.
+        </p>
+      )}
     </div>
   );
 }
