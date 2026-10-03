@@ -1,4 +1,4 @@
-import { startTransition, Suspense, use, useState, ViewTransition } from 'react';
+import { startTransition, Suspense, use, useEffect, useRef, useState, ViewTransition } from 'react';
 import { useItems } from './useItems';
 import type { Category, PaginatedResponse } from '../../types';
 import { ItemCard } from '../ItemCard';
@@ -37,12 +37,22 @@ type LastBlockProps<T extends Category> = {
   nextItems: () => void;
 };
 function LastBlock<T extends Category>({ promise, category, nextItems }: LastBlockProps<T>) {
-  const { info, results: items } = use(promise);
+  const page = use(promise);
+  const { info, results: items } = page;
   const init = items.slice(0, -1),
     last = items.at(-1);
 
+  const pending = useRef(false);
+  useEffect(() => {
+    // A failed request keeps this page and must not restart the closed iterator.
+    pending.current = false;
+  }, [page]);
+
   const ref = useIntersectionObserver<HTMLAnchorElement>((entries) => {
-    if (entries[0]?.isIntersecting && info.next !== null) nextItems();
+    if (entries[0]?.isIntersecting && info.next !== null && !pending.current) {
+      pending.current = true;
+      nextItems();
+    }
   }, promise);
 
   return (

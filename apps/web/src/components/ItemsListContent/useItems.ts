@@ -9,7 +9,8 @@ export function useItems<T extends Category>(
 ): [Promise<PaginatedResponse<T>>, () => void] {
   const navigate = useNavigate();
   const { hash } = useLocation();
-  const pageNum = Number(hash.replace('#', ''));
+  const parsed = Number(hash.replace('#', ''));
+  const pageNum = Math.max(0, (Number.isSafeInteger(parsed) && parsed) || 0);
 
   function incrementPage() {
     navigate(`#${pageNum + 1}`, { replace: true });
@@ -25,8 +26,14 @@ export function useItems<T extends Category>(
   return [
     currentPage,
     () => {
-      incrementPage();
-      const request = pages.next().then((result) => result.value ?? currentPage);
+      const request = pages
+        .next()
+        .then((result) => result.value ?? Promise.reject(new Error('Pagination returned no page')))
+        .then((page) => {
+          incrementPage();
+          return page;
+        })
+        .catch(() => currentPage);
       startTransition(() => setCurrentPage(request));
     },
   ];
@@ -57,9 +64,9 @@ async function* createAsyncGenerator<T extends Category>(
 
   while (lastHandled.info.next !== null) {
     yield lastHandled;
-    const request = curryGetItems(lastHandled.info.next);
+    const nextPage = await curryGetItems(lastHandled.info.next);
     saveHistory(lastHandled);
-    lastHandled = await request;
+    lastHandled = nextPage;
   }
   return lastHandled;
 }
