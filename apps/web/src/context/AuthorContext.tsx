@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, use } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 type AuthorContextType = {
   login: string;
@@ -18,16 +18,11 @@ export const AuthorProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     fetch('https://api.github.com/users/wannabeloved')
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setAuthorInfo);
 
-        return () => {};
-    }, []);
+    return () => {};
+  }, []);
 
-  return (
-    <AuthorContext value={authorInfo}>
-      {children}
-    </AuthorContext>
-  );
+  return <AuthorContext value={authorInfo}>{children}</AuthorContext>;
 };
-

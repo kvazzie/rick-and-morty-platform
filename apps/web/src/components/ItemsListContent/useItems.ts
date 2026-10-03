@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router';
 export function useItems<T extends Category>(
   category: T,
   setHistory: (items: PaginatedResponse<T>) => void
-): [Promise<PaginatedResponse<T>>, () => void] {
+): [Promise<PaginatedResponse<T>>, () => void, boolean] {
   const navigate = useNavigate();
   const { hash, key } = useLocation();
   const activeLocation = useRef<object | null>(null);
@@ -29,6 +29,7 @@ export function useItems<T extends Category>(
   const [currentPage, setCurrentPage] = useState<Promise<PaginatedResponse<T>>>(() =>
     pages.next().then((result) => result.value)
   );
+  const [loadFailed, setLoadFailed] = useState(false);
 
   return [
     currentPage,
@@ -50,9 +51,13 @@ export function useItems<T extends Category>(
             incrementPage();
           return page;
         })
-        .catch(() => currentPage);
+        .catch(() => {
+          setLoadFailed(true);
+          return currentPage;
+        });
       startTransition(() => setCurrentPage(request));
     },
+    loadFailed,
   ];
 }
 

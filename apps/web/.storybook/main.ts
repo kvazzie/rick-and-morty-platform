@@ -20,6 +20,13 @@ const config: StorybookConfig = {
     mergeConfig(config, {
       plugins: [react({ compiler: { target: '19', panicThreshold: 'all_errors' } }), tailwindcss()],
       define: { 'import.meta.vitest': 'undefined' },
+      resolve: {
+        alias: {
+          'virtual:pwa-register/react': fileURLToPath(
+            new URL('../src/pages/pwa-register.test-helpers.ts', import.meta.url)
+          ),
+        },
+      },
     }),
 };
 

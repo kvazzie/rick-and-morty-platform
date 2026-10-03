@@ -18,6 +18,12 @@ The initial agreed boundaries are the exported category validator, public API fu
 requests, and the component loading message. Retained cases live in `src/utils/index.ts`, `src/api/index.test.ts`, and
 `src/components/Spinner.stories.tsx` in the web workspace. Empty application suites fail.
 
+Public browsing stories in `src/pages/routes.stories.tsx` render the application's route definitions with a memory router.
+They cover anonymous list/detail navigation, direct detail entry, loading, incremental loading, visible request failures,
+and client-side recovery from removed authentication URLs and unsupported categories. Fetch and browser storage are external
+boundaries; application modules remain real. Storybook aliases `virtual:pwa-register/react` to the colocated
+`pwa-register.test-helpers.ts` so these stories do not register an application service worker.
+
 E2E tests have not been adopted. Reserve `apps/web/test/` for future E2E tests; add its layout and runner only when agreed.
 The browser component suite does not replace deployed-PWA tests for offline startup, caching, updates, or installability.
 
