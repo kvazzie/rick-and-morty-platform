@@ -43,6 +43,7 @@ From a clean checkout with the global Vite+ CLI and Nix installed, install the l
 then run the maintenance checks from the root:
 
 ```sh
+vp env on
 vp install --frozen-lockfile
 vp env exec --node 22 --package-manager pnpm@10.29.3 vp exec --filter @rick-and-morty-platform/web playwright install chromium
 vp check
