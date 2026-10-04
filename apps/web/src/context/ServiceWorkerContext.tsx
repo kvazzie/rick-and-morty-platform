@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export const ServiceWorkerProvider = ({ children }: { children: React.ReactNode }) => {
-  const registration = useRegisterSW({ immediate: true });
+  const reloadRequested = useRef(false);
+  const [activatedElsewhere, setActivatedElsewhere] = useState(false);
+  const registration = useRegisterSW({
+    immediate: true,
+    onNeedReload() {
+      if (reloadRequested.current) window.location.reload();
+      else setActivatedElsewhere(true);
+    },
+  });
   const [needRefresh] = registration.needRefresh;
   const [deferred, setDeferred] = useState(false);
+
+  function acceptUpdate() {
+    reloadRequested.current = true;
+    if (activatedElsewhere) window.location.reload();
+    else void registration.updateServiceWorker(true);
+  }
 
   return (
     <>
       {children}
-      {needRefresh &&
+      {(needRefresh || activatedElsewhere) &&
         (deferred ? (
           <button
             type="button"
@@ -25,15 +39,12 @@ export const ServiceWorkerProvider = ({ children }: { children: React.ReactNode 
           >
             <h2 className="font-semibold">An update is ready</h2>
             <p className="mt-2 text-sm">
+              {activatedElsewhere && 'The update is active in another tab. '}
               Update now to reload this page with the new version. Your current address and browsing history will stay
               in place.
             </p>
             <div className="mt-3 flex gap-3">
-              <button
-                type="button"
-                className="rounded bg-green-700 px-3 py-2"
-                onClick={() => registration.updateServiceWorker(true)}
-              >
+              <button type="button" className="rounded bg-green-700 px-3 py-2" onClick={acceptUpdate}>
                 Update now
               </button>
               <button

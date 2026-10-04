@@ -14,7 +14,8 @@ When the browser reconnects, the current page retries its requests and refreshes
 
 When a new service worker is ready, an update prompt lets you choose when to reload. `Update now` activates the
 waiting worker and reloads the current address, preserving its route, query, pagination hash, and browser history.
-`Later` keeps the current session running and leaves an `Update available` button to reopen the prompt. A new worker
+`Later` keeps the current session running and leaves an `Update available` button to reopen the prompt. Accepting in
+another tab activates the shared worker, but this tab waits for its own consent before reloading. A new worker
 does not automatically take over open tabs. Closing all tabs can allow a waiting worker to activate through the
 browser's normal service-worker lifecycle.
 

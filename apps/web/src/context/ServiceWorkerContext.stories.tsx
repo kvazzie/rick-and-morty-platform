@@ -62,3 +62,14 @@ export const DeferUpdate: Story = {
     await expect(update).not.toHaveBeenCalled();
   },
 };
+
+export const AnotherTabAccepts: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByRole('button', { name: 'Later' }));
+    serviceWorker.activate();
+    await expect(canvas.getByText('Current browsing session')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Update available' }));
+    await expect(await canvas.findByRole('status')).toHaveTextContent('The update is active in another tab');
+    await expect(update).not.toHaveBeenCalled();
+  },
+};

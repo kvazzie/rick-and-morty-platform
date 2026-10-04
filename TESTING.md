@@ -28,7 +28,9 @@ boundaries; application modules remain real. Storybook aliases `virtual:pwa-regi
 
 Update-prompt stories in `src/context/ServiceWorkerContext.stories.tsx` render the real service-worker provider with
 the same external registration boundary. They cover an up-to-date session, waiting for consent, accepting an update,
-and deferring then reopening the prompt without activating the worker. Real worker activation, retained route state,
+and deferring then reopening the prompt without activating the worker, including activation by another tab.
+Public browsing stories also verify that pagination restored from the URL renders the earlier pages immediately.
+Real worker activation, retained route state,
 and generated installation metadata are verified separately against a production build in a browser.
 
 E2E tests have not been adopted. Reserve `apps/web/test/` for future E2E tests; add its layout and runner only when agreed.
