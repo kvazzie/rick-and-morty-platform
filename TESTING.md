@@ -19,7 +19,8 @@ requests, and the component loading message. Retained cases live in `src/utils/i
 `src/components/Spinner.stories.tsx` in the web workspace. Empty application suites fail.
 
 Public browsing stories in `src/pages/routes.stories.tsx` render the application's route definitions with a memory router.
-They cover anonymous list/detail navigation, direct detail entry, loading, incremental loading, visible request failures,
+They cover the home-page browsing actions, anonymous navigation across characters, locations, and episodes, displayed
+detail values, direct detail entry, initial list and detail loading, incremental loading, visible request failures,
 offline cache-miss messages, retrying details and incremental loading on reconnect, and client-side recovery from removed
 authentication URLs and unsupported categories. Optional author request failures preserve browsing; unexpected author
 response errors reach the route error boundary. Fetch and browser storage are external
@@ -35,6 +36,24 @@ and generated installation metadata are verified separately against a production
 
 E2E tests have not been adopted. Reserve `apps/web/test/` for future E2E tests; add its layout and runner only when agreed.
 The browser component suite does not replace deployed-PWA tests for offline startup, caching, updates, or installability.
+
+## Baseline validation
+
+From a clean checkout with the global Vite+ CLI and Nix installed, install the locked dependencies and the pinned browser,
+then run the maintenance checks from the root:
+
+```sh
+vp install --frozen-lockfile
+vp env exec --node 22 --package-manager pnpm@10.29.3 vp exec --filter @rick-and-morty-platform/web playwright install chromium
+vp check
+vp run test
+vp run test:coverage
+vp run --no-cache build
+```
+
+`vp check` checks formatting, type-aware linting with warnings denied, and types. Tests are uncached and fail on assertion
+failures or empty application suites. The coverage command runs application tests and writes both HTML and LCOV reports.
+The production build removes in-source test blocks. Hooks are optional and are not part of this validation sequence.
 
 The existing environment case validates Bash behavior in `enterShell`: with `vp` absent, startup succeeds, prints the
 installer recommendation and advice to open a new shell, and continues the other diagnostics. Its `nix develop` invocation

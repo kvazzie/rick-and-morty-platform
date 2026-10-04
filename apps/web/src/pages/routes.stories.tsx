@@ -18,6 +18,9 @@ const rick = {
   image: '/pwa-192x192.png',
 };
 
+const earth = { id: 1, name: 'Earth', type: 'Planet', dimension: 'Dimension C-137' };
+const pilot = { id: 1, name: 'Pilot', air_date: 'December 2, 2013', episode: 'S01E01' };
+
 function RenderingFailure(): never {
   throw new TypeError('Rendering failed');
 }
@@ -70,6 +73,7 @@ const meta = {
         if (requestFailure === 'http') return new Response(null, { status: 500 });
       }
       if (url === 'https://rickandmortyapi.com/api/character?page=1') {
+        if (parameters.delayedList) await detailReady;
         return Response.json({
           info: {
             count: parameters.isIncremental ? 2 : 1,
@@ -93,6 +97,14 @@ const meta = {
         await detailReady;
         return Response.json({ ...rick, id: 2, name: 'Morty Smith' });
       }
+      if (url === 'https://rickandmortyapi.com/api/location?page=1') {
+        return Response.json({ info: { count: 1, pages: 1, next: null, prev: null }, results: [earth] });
+      }
+      if (url === 'https://rickandmortyapi.com/api/location/1') return Response.json(earth);
+      if (url === 'https://rickandmortyapi.com/api/episode?page=1') {
+        return Response.json({ info: { count: 1, pages: 1, next: null, prev: null }, results: [pilot] });
+      }
+      if (url === 'https://rickandmortyapi.com/api/episode/1') return Response.json(pilot);
       throw new Error(`Unexpected request: ${url}`);
     });
     const getItem = spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
@@ -119,11 +131,62 @@ export const PublicCharacters: Story = {
     await userEvent.click(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ }));
     await expect(await canvas.findByRole('heading', { name: 'Rick Sanchez' })).toBeVisible();
     await expect(canvas.getByText('Status')).toBeVisible();
+    await expect(canvas.getByText('Alive')).toBeVisible();
+    await expect(canvas.getByText('Human')).toBeVisible();
+    await expect(canvas.getByText('Male')).toBeVisible();
     await expect(canvas.queryByText(/^(login|signup|signout)$/i)).not.toBeInTheDocument();
     await expect(Storage.prototype.getItem).not.toHaveBeenCalledWith('isLoggedIn');
     await expect(Storage.prototype.getItem).not.toHaveBeenCalledWith('users');
     await expect(Storage.prototype.setItem).not.toHaveBeenCalled();
     await expect(Storage.prototype.removeItem).not.toHaveBeenCalled();
+  },
+};
+
+export const HomeToCharacters: Story = {
+  args: { initialPath: '/' },
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+    await userEvent.click(await canvas.findByRole('button', { name: 'Explore Characters' }));
+    await PublicCharacters.play?.(context);
+    await userEvent.click(canvas.getByRole('link', { name: 'Home' }));
+    await expect(await canvas.findByRole('button', { name: 'Explore Characters' })).toBeVisible();
+  },
+};
+
+export const ListLoading: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { delayedList: true },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Loading...')).toBeVisible();
+    await expect(canvas.queryByRole('link', { name: /Rick Sanchez.*Human/ })).not.toBeInTheDocument();
+    finishLoading();
+    await expect(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+    await expect(canvas.queryByText('Loading...')).not.toBeInTheDocument();
+  },
+};
+
+export const PublicLocationsAndEpisodes: Story = {
+  args: { initialPath: '/' },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByRole('button', { name: 'Discover Locations' }));
+    await expect(await canvas.findByRole('heading', { name: 'locations' })).toBeVisible();
+    await userEvent.click(await canvas.findByRole('link', { name: /Earth.*Dimension C-137/ }));
+    await expect(await canvas.findByRole('heading', { name: 'Earth' })).toBeVisible();
+    await expect(canvas.getByText('Planet')).toBeVisible();
+    await expect(canvas.getByText('Dimension C-137')).toBeVisible();
+
+    await userEvent.click(canvas.getByRole('link', { name: 'Episodes' }));
+    await expect(await canvas.findByRole('heading', { name: 'episodes' })).toBeVisible();
+    await userEvent.click(await canvas.findByRole('link', { name: /Pilot.*S01E01/ }));
+    await expect(await canvas.findByRole('heading', { name: 'Pilot' })).toBeVisible();
+    await expect(canvas.getByText('December 2, 2013')).toBeVisible();
+    await expect(canvas.getByText('S01E01')).toBeVisible();
+
+    await userEvent.click(canvas.getByRole('link', { name: 'Home' }));
+    await userEvent.click(await canvas.findByRole('button', { name: 'View Episodes' }));
+    await expect(await canvas.findByRole('link', { name: /Pilot.*S01E01/ })).toBeVisible();
+    await expect(canvas.queryByText(/^(login|signup|signout)$/i)).not.toBeInTheDocument();
+    await expect(Storage.prototype.setItem).not.toHaveBeenCalled();
   },
 };
 
