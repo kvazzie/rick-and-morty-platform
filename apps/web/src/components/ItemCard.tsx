@@ -33,7 +33,14 @@ export const ItemCard = ({ item, category, ...rest }: ItemCardProps) => {
         <CardBody className="overflow-visible p-0 text-center">
           {isCharacter(item) && (
             <ViewTransition name={`character-image-${item.id}`}>
-              <Image src={item.image} alt={item.name} className="w-full h-48 object-cover" width="100%" shadow="sm" />
+              <Image
+                src={item.image}
+                crossOrigin="anonymous"
+                alt={item.name}
+                className="w-full h-48 object-cover"
+                width="100%"
+                shadow="sm"
+              />
             </ViewTransition>
           )}
           <Spacer y={2} />

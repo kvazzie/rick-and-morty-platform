@@ -20,7 +20,8 @@ requests, and the component loading message. Retained cases live in `src/utils/i
 
 Public browsing stories in `src/pages/routes.stories.tsx` render the application's route definitions with a memory router.
 They cover anonymous list/detail navigation, direct detail entry, loading, incremental loading, visible request failures,
-and client-side recovery from removed authentication URLs and unsupported categories. Fetch and browser storage are external
+offline cache-miss messages, retrying details and incremental loading on reconnect, and client-side recovery from removed
+authentication URLs and unsupported categories. Fetch and browser storage are external
 boundaries; application modules remain real. Storybook aliases `virtual:pwa-register/react` to the colocated
 `pwa-register.test-helpers.ts` so these stories do not register an application service worker.
 

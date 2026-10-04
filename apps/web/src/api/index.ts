@@ -9,13 +9,22 @@ export class RequestError extends Error {
   }
 }
 
+export class OfflineError extends RequestError {
+  constructor(options?: ErrorOptions) {
+    super('This content is not available offline. Connect to the internet and try again.', options);
+    this.name = 'OfflineError';
+  }
+}
+
 async function fetchJson<T>(url: string, failureMessage: string): Promise<T> {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { credentials: 'omit', cache: 'no-store' });
+    if (response.headers.get('X-Rick-and-Morty-Offline') === '1') throw new OfflineError();
     if (!response.ok) throw new RequestError(failureMessage);
     return await response.json();
   } catch (error) {
     if (error instanceof RequestError) throw error;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new OfflineError({ cause: error });
     throw new RequestError(error instanceof Error ? error.message : failureMessage, { cause: error });
   }
 }

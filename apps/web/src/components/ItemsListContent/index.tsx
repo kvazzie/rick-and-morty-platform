@@ -5,10 +5,11 @@ import { ItemCard } from '../ItemCard';
 import { Spinner } from '../Spinner';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { routesMap } from '../../utils';
+import { OfflineError } from '../../api';
 
 export function ItemsListContent<T extends Category>({ category }: { category: T }) {
   const [history, setHistory] = useState<PaginatedResponse<Category>[]>([]);
-  const [items, nextItems, loadFailed] = useItems(routesMap[category], (news) =>
+  const [items, nextItems, loadError] = useItems(routesMap[category], (news) =>
     startTransition(() => setHistory((currents) => [...currents, news]))
   );
 
@@ -27,9 +28,11 @@ export function ItemsListContent<T extends Category>({ category }: { category: T
           <LastBlock promise={items} category={category} nextItems={nextItems} />
         </Suspense>
       </ViewTransition>
-      {loadFailed && (
+      {loadError && (
         <p role="alert" className="col-span-full text-center text-red-300">
-          Couldn't load more items. Check your connection and try again later.
+          {loadError instanceof OfflineError
+            ? `You're offline. ${loadError.message}`
+            : "Couldn't load more items. Check your connection and try again later."}
         </p>
       )}
     </div>

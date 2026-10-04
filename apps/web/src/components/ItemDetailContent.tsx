@@ -31,7 +31,7 @@ export const ItemDetailContent = ({ category, id }: { category: Category; id: st
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
             <ViewTransition name={`character-image-${item.id}`}>
-              <img src={item.image} alt={item.name} className="rounded-lg w-full shadow-lg" />
+              <img src={item.image} crossOrigin="anonymous" alt={item.name} className="rounded-lg w-full shadow-lg" />
             </ViewTransition>
           </div>
           <div className="md:col-span-2">

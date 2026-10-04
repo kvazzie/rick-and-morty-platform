@@ -1,11 +1,29 @@
-import { Outlet, useNavigation } from 'react-router';
+import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router';
 import { NavigationBar } from './NavigationBar';
 import { Providers } from '../context/index';
-import { Suspense, ViewTransition } from 'react';
+import { Suspense, useLayoutEffect, useState, ViewTransition } from 'react';
 
 export const Layout = () => {
-  const navigator = useNavigation();
-  const isNavigating = Boolean(navigator.location);
+  const navigation = useNavigation();
+  const isNavigating = Boolean(navigation.location);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [connectivityVersion, setConnectivityVersion] = useState(0);
+
+  useLayoutEffect(() => {
+    const refresh = async () => {
+      await navigate(location, { replace: true, state: location.state, preventScrollReset: true });
+      // Remount pagination and render-error boundaries to retry the visible content.
+      setConnectivityVersion((version) => version + 1);
+    };
+    window.addEventListener('online', refresh);
+    // Initial API reads can finish before the worker controls the first visit.
+    navigator.serviceWorker?.addEventListener('controllerchange', refresh);
+    return () => {
+      window.removeEventListener('online', refresh);
+      navigator.serviceWorker?.removeEventListener('controllerchange', refresh);
+    };
+  }, [location, navigate]);
 
   return (
     <Providers>
@@ -15,7 +33,7 @@ export const Layout = () => {
           {isNavigating && <div>Loading in Layout main...</div>}
           <ViewTransition>
             <Suspense fallback={<div>Loading in Layout Suspense...</div>}>
-              <Outlet />
+              <Outlet key={connectivityVersion} />
             </Suspense>
           </ViewTransition>
         </main>

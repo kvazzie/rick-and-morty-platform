@@ -7,6 +7,7 @@ import { Layout } from '../components/Layout';
 import { NotFoundPage } from './NotFoundPage';
 
 let finishLoading = () => {};
+let restoreConnection = () => {};
 
 const rick = {
   id: 1,
@@ -45,6 +46,11 @@ const meta = {
   parameters: { layout: 'fullscreen' },
   beforeEach: ({ parameters }) => {
     const originalFetch = globalThis.fetch;
+    let requestFailure = parameters.requestFailure;
+    restoreConnection = () => {
+      requestFailure = undefined;
+      window.dispatchEvent(new Event('online'));
+    };
     const detailReady = new Promise<void>((resolve) => {
       finishLoading = resolve;
     });
@@ -52,8 +58,10 @@ const meta = {
       const url = String(input);
       if (url.startsWith('https://api.github.com/')) return Response.json({});
       const failRequest = !parameters.incremental || url.endsWith('?page=2');
-      if (failRequest && parameters.requestFailure === 'network') throw new TypeError('Network unavailable');
-      if (failRequest && parameters.requestFailure === 'http') return new Response(null, { status: 500 });
+      if (failRequest && requestFailure === 'offline')
+        return new Response(null, { status: 503, headers: { 'X-Rick-and-Morty-Offline': '1' } });
+      if (failRequest && requestFailure === 'network') throw new TypeError('Network unavailable');
+      if (failRequest && requestFailure === 'http') return new Response(null, { status: 500 });
       if (url === 'https://rickandmortyapi.com/api/character?page=1') {
         return Response.json({
           info: {
@@ -83,6 +91,7 @@ const meta = {
     const removeItem = spyOn(Storage.prototype, 'removeItem');
     return () => {
       globalThis.fetch = originalFetch;
+      restoreConnection = () => {};
       finishLoading();
       getItem.mockRestore();
       setItem.mockRestore();
@@ -138,6 +147,28 @@ export const HttpDetailFailure: Story = {
   play: NetworkFailure.play,
 };
 
+export const OfflineList: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { requestFailure: 'offline' },
+  play: async ({ canvas, userEvent }) => {
+    await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
+    await expect(canvas.getByRole('alert')).toHaveTextContent('This content is not available offline');
+    await userEvent.click(canvas.getByRole('link', { name: 'Go Home' }));
+    await expect(await canvas.findByRole('button', { name: 'Explore Characters' })).toBeVisible();
+  },
+};
+
+export const ReconnectedDetail: Story = {
+  args: { initialPath: '/characters/1' },
+  parameters: { requestFailure: 'offline' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
+    restoreConnection();
+    await expect(await canvas.findByRole('heading', { name: 'Rick Sanchez' })).toBeVisible();
+    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+  },
+};
+
 export const IncrementalLoading: Story = {
   args: { initialPath: '/characters' },
   parameters: { incremental: true },
@@ -153,6 +184,28 @@ export const IncrementalFailure: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('alert')).toHaveTextContent("Couldn't load more items");
     await expect(canvas.getByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+  },
+};
+
+export const OfflineMoreItems: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { incremental: true, requestFailure: 'offline' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
+    await expect(canvas.getByRole('alert')).toHaveTextContent('This content is not available offline');
+    await expect(canvas.getByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+  },
+};
+
+export const ReconnectedMoreItems: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { incremental: true, requestFailure: 'offline' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
+    restoreConnection();
+    await expect(await canvas.findByRole('link', { name: /Morty Smith.*Human/ })).toBeVisible();
+    await expect(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
   },
 };
 

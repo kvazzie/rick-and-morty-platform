@@ -19,7 +19,10 @@ export const AuthorProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     fetch('https://api.github.com/users/wannabeloved')
       .then((res) => res.json())
-      .then(setAuthorInfo);
+      .then(setAuthorInfo)
+      .catch(() => {
+        // Author metadata is optional, including during offline startup.
+      });
 
     return () => {};
   }, []);
