@@ -6,6 +6,12 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { pwaAssets } from './pwa-assets.config';
+import {
+  createOfflineCacheMissResponse,
+  getCacheablePublicApiResponse,
+  isCharacterImageRequest,
+  isPublicApiRequest,
+} from './pwa-cache-policy';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,34 +26,42 @@ export default defineConfig({
         tailwindcss(),
         VitePWA({
           workbox: {
-            globPatterns: [
-              '**/*.{css,html}',
-              '**/index-*.js',
-              // "**\/*.{img,jpg,jpeg,gif,png,svg,ico}",
-            ],
+            // Include lazy route chunks so an unvisited route can render offline.
+            globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+            // The full-size icon source is only used to generate the manifest icons.
+            globIgnores: ['**/ico.png'],
+            navigateFallback: 'index.html',
             runtimeCaching: [
               {
-                urlPattern: ({ url }) => {
-                  const isApi = url.origin === 'https://rickandmortyapi.com' && url.pathname.startsWith('/api/');
-                  const isMedia = url.pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|mp4|mp3|wav)$/i);
-                  return isApi && !isMedia;
-                },
+                urlPattern: isPublicApiRequest,
+                method: 'GET',
                 handler: 'NetworkFirst',
                 options: {
-                  cacheName: 'rickandmortyapi',
+                  // Do not reuse entries written by the old, unrestricted policy.
+                  cacheName: 'rick-and-morty-public-api-v1',
+                  networkTimeoutSeconds: 3,
+                  plugins: [
+                    {
+                      cacheWillUpdate: getCacheablePublicApiResponse,
+                      handlerDidError: createOfflineCacheMissResponse,
+                    },
+                  ],
                   expiration: {
-                    maxEntries: 10,
+                    maxEntries: 100,
                     maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+                    purgeOnQuotaError: true,
                   },
                 },
               },
               {
-                urlPattern: ({ request }) => request.destination === 'script',
+                urlPattern: isCharacterImageRequest,
                 handler: 'CacheFirst',
                 options: {
-                  cacheName: 'js-chunks',
+                  cacheName: 'rick-and-morty-character-images-v1',
+                  cacheableResponse: { statuses: [200] },
                   expiration: {
-                    maxEntries: 50,
+                    maxEntries: 200,
+                    maxAgeSeconds: 30 * 24 * 60 * 60,
                     purgeOnQuotaError: true,
                   },
                 },

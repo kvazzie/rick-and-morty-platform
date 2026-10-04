@@ -5,10 +5,11 @@ import { ItemCard } from '../ItemCard';
 import { Spinner } from '../Spinner';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { routesMap } from '../../utils';
+import { OfflineError } from '../../api';
 
 export function ItemsListContent<T extends Category>({ category }: { category: T }) {
   const [history, setHistory] = useState<PaginatedResponse<Category>[]>([]);
-  const [items, nextItems, loadFailed] = useItems(routesMap[category], (news) =>
+  const [items, nextItems, loadError] = useItems(routesMap[category], (news) =>
     startTransition(() => setHistory((currents) => [...currents, news]))
   );
 
@@ -27,9 +28,11 @@ export function ItemsListContent<T extends Category>({ category }: { category: T
           <LastBlock promise={items} category={category} nextItems={nextItems} />
         </Suspense>
       </ViewTransition>
-      {loadFailed && (
+      {loadError && (
         <p role="alert" className="col-span-full text-center text-red-300">
-          Couldn't load more items. Check your connection and try again later.
+          {loadError instanceof OfflineError
+            ? `You're offline. ${loadError.message}`
+            : "Couldn't load more items. Check your connection and try again later."}
         </p>
       )}
     </div>
@@ -47,15 +50,15 @@ function LastBlock<T extends Category>({ promise, category, nextItems }: LastBlo
   const init = items.slice(0, -1),
     last = items.at(-1);
 
-  const pending = useRef(false);
+  const isPending = useRef(false);
   useEffect(() => {
     // A failed request keeps this page and must not restart the closed iterator.
-    pending.current = false;
+    isPending.current = false;
   }, [page]);
 
   const ref = useIntersectionObserver<HTMLAnchorElement>((entries) => {
-    if (entries[0]?.isIntersecting && info.next !== null && !pending.current) {
-      pending.current = true;
+    if (entries[0]?.isIntersecting && info.next !== null && !isPending.current) {
+      isPending.current = true;
       nextItems();
     }
   }, promise);

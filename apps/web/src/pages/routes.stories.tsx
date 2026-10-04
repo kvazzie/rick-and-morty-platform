@@ -7,6 +7,7 @@ import { Layout } from '../components/Layout';
 import { NotFoundPage } from './NotFoundPage';
 
 let finishLoading = () => {};
+let restoreConnection = () => {};
 
 const rick = {
   id: 1,
@@ -45,21 +46,35 @@ const meta = {
   parameters: { layout: 'fullscreen' },
   beforeEach: ({ parameters }) => {
     const originalFetch = globalThis.fetch;
+    let requestFailure = parameters.requestFailure;
+    restoreConnection = () => {
+      requestFailure = undefined;
+      window.dispatchEvent(new Event('online'));
+    };
     const detailReady = new Promise<void>((resolve) => {
       finishLoading = resolve;
     });
     globalThis.fetch = fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.startsWith('https://api.github.com/')) return Response.json({});
-      const failRequest = !parameters.incremental || url.endsWith('?page=2');
-      if (failRequest && parameters.requestFailure === 'network') throw new TypeError('Network unavailable');
-      if (failRequest && parameters.requestFailure === 'http') return new Response(null, { status: 500 });
+      if (url.startsWith('https://api.github.com/')) {
+        if (parameters.authorFailure === 'network') throw new TypeError('Network unavailable');
+        if (parameters.authorFailure === 'http') return new Response(null, { status: 503 });
+        if (parameters.authorFailure === 'invalid-json') return new Response('invalid JSON');
+        return Response.json({});
+      }
+      const isFailingRequest = !parameters.isIncremental || url.endsWith('?page=2');
+      if (isFailingRequest) {
+        if (requestFailure === 'offline')
+          return new Response(null, { status: 503, headers: { 'X-Rick-and-Morty-Offline': '1' } });
+        if (requestFailure === 'network') throw new TypeError('Network unavailable');
+        if (requestFailure === 'http') return new Response(null, { status: 500 });
+      }
       if (url === 'https://rickandmortyapi.com/api/character?page=1') {
         return Response.json({
           info: {
-            count: parameters.incremental ? 2 : 1,
-            pages: parameters.incremental ? 2 : 1,
-            next: parameters.incremental ? 'https://rickandmortyapi.com/api/character?page=2' : null,
+            count: parameters.isIncremental ? 2 : 1,
+            pages: parameters.isIncremental ? 2 : 1,
+            next: parameters.isIncremental ? 'https://rickandmortyapi.com/api/character?page=2' : null,
             prev: null,
           },
           results: [rick],
@@ -83,6 +98,7 @@ const meta = {
     const removeItem = spyOn(Storage.prototype, 'removeItem');
     return () => {
       globalThis.fetch = originalFetch;
+      restoreConnection = () => {};
       finishLoading();
       getItem.mockRestore();
       setItem.mockRestore();
@@ -107,6 +123,26 @@ export const PublicCharacters: Story = {
     await expect(Storage.prototype.setItem).not.toHaveBeenCalled();
     await expect(Storage.prototype.removeItem).not.toHaveBeenCalled();
   },
+};
+
+export const InvalidAuthorResponse: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { authorFailure: 'invalid-json' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('heading', { name: 'Unexpected Application Error!' })).toBeVisible();
+  },
+};
+
+export const AuthorNetworkFailure: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { authorFailure: 'network' },
+  play: PublicCharacters.play,
+};
+
+export const AuthorHttpFailure: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { authorFailure: 'http' },
+  play: PublicCharacters.play,
 };
 
 export const DirectDetail: Story = {
@@ -138,9 +174,31 @@ export const HttpDetailFailure: Story = {
   play: NetworkFailure.play,
 };
 
+export const OfflineList: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { requestFailure: 'offline' },
+  play: async ({ canvas, userEvent }) => {
+    await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
+    await expect(canvas.getByRole('alert')).toHaveTextContent('This content is not available offline');
+    await userEvent.click(canvas.getByRole('link', { name: 'Go Home' }));
+    await expect(await canvas.findByRole('button', { name: 'Explore Characters' })).toBeVisible();
+  },
+};
+
+export const ReconnectedDetail: Story = {
+  args: { initialPath: '/characters/1' },
+  parameters: { requestFailure: 'offline' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
+    restoreConnection();
+    await expect(await canvas.findByRole('heading', { name: 'Rick Sanchez' })).toBeVisible();
+    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+  },
+};
+
 export const IncrementalLoading: Story = {
   args: { initialPath: '/characters' },
-  parameters: { incremental: true },
+  parameters: { isIncremental: true },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('link', { name: /Morty Smith.*Human/ })).toBeVisible();
     await expect(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
@@ -149,10 +207,32 @@ export const IncrementalLoading: Story = {
 
 export const IncrementalFailure: Story = {
   args: { initialPath: '/characters' },
-  parameters: { incremental: true, requestFailure: 'network' },
+  parameters: { isIncremental: true, requestFailure: 'network' },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('alert')).toHaveTextContent("Couldn't load more items");
     await expect(canvas.getByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+  },
+};
+
+export const OfflineMoreItems: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { isIncremental: true, requestFailure: 'offline' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
+    await expect(canvas.getByRole('alert')).toHaveTextContent('This content is not available offline');
+    await expect(canvas.getByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+  },
+};
+
+export const ReconnectedMoreItems: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { isIncremental: true, requestFailure: 'offline' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
+    restoreConnection();
+    await expect(await canvas.findByRole('link', { name: /Morty Smith.*Human/ })).toBeVisible();
+    await expect(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
   },
 };
 

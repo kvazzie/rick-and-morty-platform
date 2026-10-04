@@ -77,3 +77,38 @@ it('rejects a listing request when the network is unavailable', async () => {
   await expect(request).rejects.toThrow('Network unavailable');
   await expect(request).rejects.toHaveProperty('cause', failure);
 });
+
+it('reports an offline cache miss for an uncached character', async () => {
+  vi.stubGlobal('fetch', async () => new Response(null, { status: 503, headers: { 'X-Rick-and-Morty-Offline': '1' } }));
+
+  const request = getItem('character', '42');
+
+  await expect(request).rejects.toBeInstanceOf(RequestError);
+  await expect(request).rejects.toHaveProperty('name', 'OfflineError');
+  await expect(request).rejects.toThrow(
+    'This content is not available offline. Connect to the internet and try again.'
+  );
+});
+
+it('reports offline content when the browser is disconnected without a service worker', async () => {
+  const failure = new TypeError('Failed to fetch');
+  vi.stubGlobal('navigator', { onLine: false });
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(failure));
+
+  const request = getItems('character');
+
+  await expect(request).rejects.toHaveProperty('name', 'OfflineError');
+  await expect(request).rejects.toHaveProperty('cause', failure);
+});
+
+it('retrieves public character data without credentials or a stale HTTP cache response', async () => {
+  const fetch = vi.fn(async () => Response.json({ id: 1, name: 'Rick Sanchez' }));
+  vi.stubGlobal('fetch', fetch);
+
+  await getItem('character', '1');
+
+  expect(fetch).toHaveBeenCalledWith('https://rickandmortyapi.com/api/character/1', {
+    credentials: 'omit',
+    cache: 'no-store',
+  });
+});

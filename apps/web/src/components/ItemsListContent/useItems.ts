@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router';
 export function useItems<T extends Category>(
   category: T,
   setHistory: (items: PaginatedResponse<T>) => void
-): [Promise<PaginatedResponse<T>>, () => void, boolean] {
+): [Promise<PaginatedResponse<T>>, () => void, Error | null] {
   const navigate = useNavigate();
   const { hash, key } = useLocation();
   const activeLocation = useRef<object | null>(null);
@@ -26,10 +26,13 @@ export function useItems<T extends Category>(
   // The keyed list owns one pagination iterator for its lifetime.
   const [pages] = useState(() => createAsyncGenerator(category, pageNum + 1, setHistory));
 
-  const [currentPage, setCurrentPage] = useState<Promise<PaginatedResponse<T>>>(() =>
-    pages.next().then((result) => result.value)
-  );
-  const [loadFailed, setLoadFailed] = useState(false);
+  const [currentPage, setCurrentPage] = useState<Promise<PaginatedResponse<T>>>(() => {
+    const request = pages.next().then((result) => result.value);
+    // Observe discarded-render failures; use(request) still throws them to the route boundary.
+    void request.catch((error: unknown) => error);
+    return request;
+  });
+  const [loadError, setLoadError] = useState<Error | null>(null);
 
   return [
     currentPage,
@@ -51,13 +54,13 @@ export function useItems<T extends Category>(
             incrementPage();
           return page;
         })
-        .catch(() => {
-          setLoadFailed(true);
+        .catch((error: unknown) => {
+          setLoadError(error instanceof Error ? error : new Error('Failed to load more items'));
           return currentPage;
         });
       startTransition(() => setCurrentPage(request));
     },
-    loadFailed,
+    loadError,
   ];
 }
 

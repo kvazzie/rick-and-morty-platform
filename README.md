@@ -7,6 +7,16 @@ Visitors can browse characters, locations, and episodes without an account. List
 navigation. Requests show loading indicators and visible failure messages, including when an additional page cannot load.
 The application has no login or signup flow and does not use local storage for authentication.
 
+After an online visit finishes installing the service worker, the application shell and route code can start offline.
+Previously requested public API pages, details, and character images remain available from the local cache.
+Uncached content shows an explicit offline message, and an unavailable next page keeps the visible characters.
+When the browser reconnects, the current page retries its requests and refreshes the cached data.
+
+Public, credential-free GET requests to the character, location, and episode endpoints use network-first caching,
+including numbered pages. Only successful JSON responses are stored. Mutations, authenticated requests, unknown
+endpoints or query parameters, and responses marked private or no-store bypass this policy. API data is limited to
+100 cached responses and character images to 200, with a 30-day expiry. Browser storage eviction can also remove them.
+
 ## Workspaces
 
 - `apps/web` contains the Rick and Morty Viewer application.
