@@ -12,6 +12,17 @@ Previously requested public API pages, details, and character images remain avai
 Uncached content shows an explicit offline message, and an unavailable next page keeps the visible characters.
 When the browser reconnects, the current page retries its requests and refreshes the cached data.
 
+When a new service worker is ready, an update prompt lets you choose when to reload. `Update now` activates the
+waiting worker and reloads the current address, preserving its route, query, pagination hash, and browser history.
+`Later` keeps the current session running and leaves an `Update available` button to reopen the prompt. Accepting in
+another tab activates the shared worker, but this tab waits for its own consent before reloading. A new worker
+does not automatically take over open tabs. Closing all tabs can allow a waiting worker to activate through the
+browser's normal service-worker lifecycle.
+
+The installable app is named Rick and Morty Viewer. Its standalone manifest uses the application's dark theme,
+a root-scoped start address and stable ID, generated 192- and 512-pixel standard icons, and a separate 512-pixel
+maskable icon. The PWA asset generator also supplies favicon and Apple touch links in the production HTML.
+
 Public, credential-free GET requests to the character, location, and episode endpoints use network-first caching,
 including numbered pages. Only successful JSON responses are stored. Mutations, authenticated requests, unknown
 endpoints or query parameters, and responses marked private or no-store bypass this policy. API data is limited to

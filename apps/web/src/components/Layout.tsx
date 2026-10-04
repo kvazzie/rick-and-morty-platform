@@ -11,17 +11,24 @@ export const Layout = () => {
   const [connectivityVersion, setConnectivityVersion] = useState(0);
 
   useLayoutEffect(() => {
+    let controlled = Boolean(navigator.serviceWorker?.controller);
     const refresh = async () => {
       await navigate(location, { replace: true, state: location.state, preventScrollReset: true });
       // Remount pagination and render-error boundaries to retry the visible content.
       setConnectivityVersion((version) => version + 1);
     };
+    const refreshOnFirstControl = () => {
+      if (!controlled && navigator.serviceWorker?.controller) {
+        controlled = true;
+        void refresh();
+      }
+    };
     window.addEventListener('online', refresh);
     // Initial API reads can finish before the worker controls the first visit.
-    navigator.serviceWorker?.addEventListener('controllerchange', refresh);
+    navigator.serviceWorker?.addEventListener('controllerchange', refreshOnFirstControl);
     return () => {
       window.removeEventListener('online', refresh);
-      navigator.serviceWorker?.removeEventListener('controllerchange', refresh);
+      navigator.serviceWorker?.removeEventListener('controllerchange', refreshOnFirstControl);
     };
   }, [location, navigate]);
 
