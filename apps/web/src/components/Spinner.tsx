@@ -1,4 +1,4 @@
-import { Spinner as HeroSpinner } from "@heroui/spinner";
+import { Spinner as HeroSpinner } from '@heroui/spinner';
 
 export const Spinner = () => {
   return (

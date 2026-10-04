@@ -1,5 +1,5 @@
-import { use } from "react";
-import { PreviousPathContext } from "../context/PreviousPathContext";
+import { use } from 'react';
+import { PreviousPathContext } from '../context/PreviousPathContext';
 
 export const usePreviousPath = () => {
   const context = use(PreviousPathContext);

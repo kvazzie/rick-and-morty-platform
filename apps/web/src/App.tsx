@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 function App() {
   return (
     <Suspense fallback={<div>Loading in App...</div>}>
-    <RouterProvider router={router} />
+      <RouterProvider router={router} />
     </Suspense>
   );
 }
