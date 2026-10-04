@@ -77,13 +77,15 @@ const meta = {
             next: parameters.isIncremental ? 'https://rickandmortyapi.com/api/character?page=2' : null,
             prev: null,
           },
-          results: [rick],
+          results: parameters.restoredPagination
+            ? Array.from({ length: 20 }, (_, index) => ({ ...rick, id: index + 1, name: `Character ${index + 1}` }))
+            : [rick],
         });
       }
       if (url === 'https://rickandmortyapi.com/api/character?page=2') {
         return Response.json({
           info: { count: 2, pages: 2, next: null, prev: 'https://rickandmortyapi.com/api/character?page=1' },
-          results: [{ ...rick, id: 2, name: 'Morty Smith' }],
+          results: [{ ...rick, id: parameters.restoredPagination ? 21 : 2, name: 'Morty Smith' }],
         });
       }
       if (url === 'https://rickandmortyapi.com/api/character/1') return Response.json(rick);
@@ -202,6 +204,15 @@ export const IncrementalLoading: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('link', { name: /Morty Smith.*Human/ })).toBeVisible();
     await expect(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+  },
+};
+
+export const RestoredPagination: Story = {
+  args: { initialPath: '/characters#1' },
+  parameters: { isIncremental: true, restoredPagination: true },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('link', { name: /Morty Smith.*Human/ })).toBeInTheDocument();
+    await expect(canvas.getByRole('link', { name: /Character 1\b.*Human/ })).toBeInTheDocument();
   },
 };
 

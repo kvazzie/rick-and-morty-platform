@@ -1,6 +1,6 @@
 import { startTransition, useEffect, useRef, useState } from 'react';
 import { getItems } from '../../api';
-import type { Category, PaginatedResponse } from '../../types';
+import type { Category, Item, PaginatedResponse } from '../../types';
 import { useLocation, useNavigate } from 'react-router';
 
 export function useItems<T extends Category>(
@@ -8,7 +8,7 @@ export function useItems<T extends Category>(
   setHistory: (items: PaginatedResponse<T>) => void
 ): [Promise<PaginatedResponse<T>>, () => void, Error | null] {
   const navigate = useNavigate();
-  const { hash, key } = useLocation();
+  const { hash, key, search } = useLocation();
   const activeLocation = useRef<object | null>(null);
   useEffect(() => {
     activeLocation.current = {};
@@ -20,7 +20,7 @@ export function useItems<T extends Category>(
   const pageNum = Math.max(0, (Number.isSafeInteger(parsed) && parsed) || 0);
 
   function incrementPage() {
-    navigate(`#${pageNum + 1}`, { replace: true });
+    navigate({ search, hash: `#${pageNum + 1}` }, { replace: true });
   }
 
   // The keyed list owns one pagination iterator for its lifetime.
@@ -75,16 +75,12 @@ async function* createAsyncGenerator<T extends Category>(
   let lastHandled: PaginatedResponse<T>;
 
   {
-    const requests = Array.from({ length: initNum }, (_, index) => curryGetItems(index + 1));
-    const lastEl = requests.pop()!;
-
-    for (const request of requests) {
-      const page = await request;
-      yield page;
-      saveHistory(page);
-    }
-
-    lastHandled = await lastEl;
+    const initialPages = await Promise.all(Array.from({ length: initNum }, (_, index) => curryGetItems(index + 1)));
+    // Render restored pages together without issuing updates before the list mounts.
+    lastHandled = {
+      ...initialPages.at(-1)!,
+      results: initialPages.flatMap<Item>((page) => page.results) as PaginatedResponse<T>['results'],
+    };
   }
 
   while (lastHandled.info.next !== null) {
