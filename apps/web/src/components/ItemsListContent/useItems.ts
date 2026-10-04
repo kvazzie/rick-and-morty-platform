@@ -28,8 +28,8 @@ export function useItems<T extends Category>(
 
   const [currentPage, setCurrentPage] = useState<Promise<PaginatedResponse<T>>>(() => {
     const request = pages.next().then((result) => result.value);
-    // React can discard a suspended initial render before it observes the rejection.
-    void request.catch(() => {});
+    // Observe discarded-render failures; use(request) still throws them to the route boundary.
+    void request.catch((error: unknown) => error);
     return request;
   });
   const [loadError, setLoadError] = useState<Error | null>(null);

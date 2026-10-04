@@ -6,21 +6,21 @@ import { OfflineError, RequestError } from '../api';
 export const NotFoundPage = () => {
   const err = useRouteError();
   const { previousPath } = usePreviousPath();
-  const requestFailed = err instanceof RequestError;
-  const offline = err instanceof OfflineError;
+  const isRequestFailed = err instanceof RequestError;
+  const isOffline = err instanceof OfflineError;
 
   return (
     <div
-      role={requestFailed ? 'alert' : undefined}
+      role={isRequestFailed ? 'alert' : undefined}
       className="flex flex-col items-center justify-center min-h-[calc(100vh-150px)] text-center p-4"
     >
       <h1 className="text-4xl font-bold text-red-500 mb-4">
-        {offline ? "You're offline" : requestFailed ? 'Unable to load content' : '404'}
+        {isOffline ? "You're offline" : isRequestFailed ? 'Unable to load content' : '404'}
       </h1>
       <p className="text-2xl text-gray-300 mb-8">
-        {offline
+        {isOffline
           ? err.message
-          : requestFailed
+          : isRequestFailed
             ? 'The request failed. Check your connection and try again later.'
             : "Oops! The page you're looking for doesn't exist."}
       </p>

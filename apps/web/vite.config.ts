@@ -6,6 +6,12 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { pwaAssets } from './pwa-assets.config';
+import {
+  createOfflineCacheMissResponse,
+  getCacheablePublicApiResponse,
+  isCharacterImageRequest,
+  isPublicApiRequest,
+} from './pwa-cache-policy';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -27,18 +33,7 @@ export default defineConfig({
             navigateFallback: 'index.html',
             runtimeCaching: [
               {
-                // Workbox serializes these callbacks. Keep them self-contained.
-                urlPattern: ({ url, request }) => {
-                  return (
-                    url.origin === 'https://rickandmortyapi.com' &&
-                    /^\/api\/(character|location|episode)(\/[1-9]\d*(,[1-9]\d*)*)?\/?$/.test(url.pathname) &&
-                    [...url.searchParams].every(([name, value]) => name === 'page' && /^[1-9]\d*$/.test(value)) &&
-                    request.credentials === 'omit' &&
-                    !request.headers.has('Authorization') &&
-                    !request.headers.has('Cookie') &&
-                    !request.headers.has('Range')
-                  );
-                },
+                urlPattern: isPublicApiRequest,
                 method: 'GET',
                 handler: 'NetworkFirst',
                 options: {
@@ -47,28 +42,8 @@ export default defineConfig({
                   networkTimeoutSeconds: 3,
                   plugins: [
                     {
-                      cacheWillUpdate: async ({ response }) => {
-                        const cacheControl = response.headers.get('Cache-Control') ?? '';
-                        const vary = (response.headers.get('Vary') ?? '')
-                          .toLowerCase()
-                          .split(',')
-                          .map((name) => name.trim());
-                        return response.status === 200 &&
-                          /^application\/json\b/i.test(response.headers.get('Content-Type') ?? '') &&
-                          !/(?:^|,)\s*(private|no-store)\b/i.test(cacheControl) &&
-                          !vary.some((name) => name === '*' || name === 'authorization' || name === 'cookie')
-                          ? response
-                          : null;
-                      },
-                      handlerDidError: async () =>
-                        new Response(JSON.stringify({ error: 'Content is not cached for offline use' }), {
-                          status: 503,
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Cache-Control': 'no-store',
-                            'X-Rick-and-Morty-Offline': '1',
-                          },
-                        }),
+                      cacheWillUpdate: getCacheablePublicApiResponse,
+                      handlerDidError: createOfflineCacheMissResponse,
                     },
                   ],
                   expiration: {
@@ -79,12 +54,7 @@ export default defineConfig({
                 },
               },
               {
-                urlPattern: ({ url, request }) =>
-                  url.origin === 'https://rickandmortyapi.com' &&
-                  /^\/api\/character\/avatar\/[1-9]\d*\.jpeg$/.test(url.pathname) &&
-                  !url.search &&
-                  request.destination === 'image' &&
-                  request.credentials !== 'include',
+                urlPattern: isCharacterImageRequest,
                 handler: 'CacheFirst',
                 options: {
                   cacheName: 'rick-and-morty-character-images-v1',

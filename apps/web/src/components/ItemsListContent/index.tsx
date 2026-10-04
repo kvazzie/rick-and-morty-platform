@@ -50,15 +50,15 @@ function LastBlock<T extends Category>({ promise, category, nextItems }: LastBlo
   const init = items.slice(0, -1),
     last = items.at(-1);
 
-  const pending = useRef(false);
+  const isPending = useRef(false);
   useEffect(() => {
     // A failed request keeps this page and must not restart the closed iterator.
-    pending.current = false;
+    isPending.current = false;
   }, [page]);
 
   const ref = useIntersectionObserver<HTMLAnchorElement>((entries) => {
-    if (entries[0]?.isIntersecting && info.next !== null && !pending.current) {
-      pending.current = true;
+    if (entries[0]?.isIntersecting && info.next !== null && !isPending.current) {
+      isPending.current = true;
       nextItems();
     }
   }, promise);
