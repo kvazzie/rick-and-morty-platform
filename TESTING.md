@@ -26,6 +26,8 @@ authentication URLs and unsupported categories. Optional author request failures
 response errors reach the route error boundary. Fetch and browser storage are external
 boundaries; application modules remain real. Storybook aliases `virtual:pwa-register/react` to the colocated
 `pwa-register.test-helpers.ts` so these stories do not register an application service worker.
+Route interactions await async React `act` because Storybook's synchronous event wrapper does not await suspended updates.
+Category journeys allow five seconds for destination content so real View Transitions can finish without a fixed sleep.
 
 Update-prompt stories in `src/context/ServiceWorkerContext.stories.tsx` render the real service-worker provider with
 the same external registration boundary. They cover an up-to-date session, waiting for consent, accepting an update,
