@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useEffect, useState } from 'react';
+import { act, useEffect, useState } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { expect, fn, spyOn } from 'storybook/test';
 import { routes } from './routes';
@@ -17,6 +17,9 @@ const rick = {
   gender: 'Male',
   image: '/pwa-192x192.png',
 };
+
+const earth = { id: 1, name: 'Earth', type: 'Planet', dimension: 'Dimension C-137' };
+const pilot = { id: 1, name: 'Pilot', air_date: 'December 2, 2013', episode: 'S01E01' };
 
 function RenderingFailure(): never {
   throw new TypeError('Rendering failed');
@@ -70,6 +73,7 @@ const meta = {
         if (requestFailure === 'http') return new Response(null, { status: 500 });
       }
       if (url === 'https://rickandmortyapi.com/api/character?page=1') {
+        if (parameters.delayedList) await detailReady;
         return Response.json({
           info: {
             count: parameters.isIncremental ? 2 : 1,
@@ -93,6 +97,14 @@ const meta = {
         await detailReady;
         return Response.json({ ...rick, id: 2, name: 'Morty Smith' });
       }
+      if (url === 'https://rickandmortyapi.com/api/location?page=1') {
+        return Response.json({ info: { count: 1, pages: 1, next: null, prev: null }, results: [earth] });
+      }
+      if (url === 'https://rickandmortyapi.com/api/location/1') return Response.json(earth);
+      if (url === 'https://rickandmortyapi.com/api/episode?page=1') {
+        return Response.json({ info: { count: 1, pages: 1, next: null, prev: null }, results: [pilot] });
+      }
+      if (url === 'https://rickandmortyapi.com/api/episode/1') return Response.json(pilot);
       throw new Error(`Unexpected request: ${url}`);
     });
     const getItem = spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
@@ -112,18 +124,89 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+// Storybook's synchronous event act does not await suspended route updates.
+async function clickAndFlushUpdates(userEvent: { click: (element: Element) => Promise<void> }, element: HTMLElement) {
+  await act(async () => {
+    await userEvent.click(element);
+  });
+}
+
 export const PublicCharacters: Story = {
   args: { initialPath: '/characters' },
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByRole('heading', { name: 'characters' })).toBeVisible();
-    await userEvent.click(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ }));
+    await clickAndFlushUpdates(userEvent, await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ }));
     await expect(await canvas.findByRole('heading', { name: 'Rick Sanchez' })).toBeVisible();
     await expect(canvas.getByText('Status')).toBeVisible();
+    await expect(canvas.getByText('Alive')).toBeVisible();
+    await expect(canvas.getByText('Human')).toBeVisible();
+    await expect(canvas.getByText('Male')).toBeVisible();
     await expect(canvas.queryByText(/^(login|signup|signout)$/i)).not.toBeInTheDocument();
     await expect(Storage.prototype.getItem).not.toHaveBeenCalledWith('isLoggedIn');
     await expect(Storage.prototype.getItem).not.toHaveBeenCalledWith('users');
     await expect(Storage.prototype.setItem).not.toHaveBeenCalled();
     await expect(Storage.prototype.removeItem).not.toHaveBeenCalled();
+  },
+};
+
+export const HomeToCharacters: Story = {
+  args: { initialPath: '/' },
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+    await clickAndFlushUpdates(userEvent, await canvas.findByRole('button', { name: 'Explore Characters' }));
+    await PublicCharacters.play?.(context);
+    await clickAndFlushUpdates(userEvent, canvas.getByRole('link', { name: 'Home' }));
+    await expect(await canvas.findByRole('button', { name: 'Explore Characters' })).toBeVisible();
+  },
+};
+
+export const ListLoading: Story = {
+  args: { initialPath: '/characters' },
+  parameters: { delayedList: true },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Loading...')).toBeVisible();
+    await expect(canvas.queryByRole('link', { name: /Rick Sanchez.*Human/ })).not.toBeInTheDocument();
+    finishLoading();
+    await expect(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
+    await expect(canvas.queryByText('Loading...')).not.toBeInTheDocument();
+  },
+};
+
+export const PublicLocations: Story = {
+  args: { initialPath: '/' },
+  play: async ({ canvas, userEvent }) => {
+    await clickAndFlushUpdates(userEvent, await canvas.findByRole('button', { name: 'Discover Locations' }));
+    await expect(await canvas.findByRole('heading', { name: 'locations' }, { timeout: 5000 })).toBeVisible();
+    await clickAndFlushUpdates(
+      userEvent,
+      await canvas.findByRole('link', { name: /Earth.*Dimension C-137/ }, { timeout: 5000 })
+    );
+    await expect(await canvas.findByRole('heading', { name: 'Earth' }, { timeout: 5000 })).toBeVisible();
+    await expect(canvas.getByText('Planet')).toBeVisible();
+    await expect(canvas.getByText('Dimension C-137')).toBeVisible();
+
+    await clickAndFlushUpdates(userEvent, canvas.getByRole('link', { name: 'Episodes' }));
+    await expect(await canvas.findByRole('link', { name: /Pilot.*S01E01/ }, { timeout: 5000 })).toBeVisible();
+    await expect(canvas.queryByText(/^(login|signup|signout)$/i)).not.toBeInTheDocument();
+    await expect(Storage.prototype.setItem).not.toHaveBeenCalled();
+  },
+};
+
+export const PublicEpisodes: Story = {
+  args: { initialPath: '/' },
+  play: async ({ canvas, userEvent }) => {
+    await clickAndFlushUpdates(userEvent, await canvas.findByRole('button', { name: 'View Episodes' }));
+    await expect(await canvas.findByRole('heading', { name: 'episodes' }, { timeout: 5000 })).toBeVisible();
+    await clickAndFlushUpdates(
+      userEvent,
+      await canvas.findByRole('link', { name: /Pilot.*S01E01/ }, { timeout: 5000 })
+    );
+    await expect(await canvas.findByRole('heading', { name: 'Pilot' }, { timeout: 5000 })).toBeVisible();
+    await expect(canvas.getByText('December 2, 2013')).toBeVisible();
+    await expect(canvas.getByText('S01E01')).toBeVisible();
+
+    await expect(canvas.queryByText(/^(login|signup|signout)$/i)).not.toBeInTheDocument();
+    await expect(Storage.prototype.setItem).not.toHaveBeenCalled();
   },
 };
 
@@ -154,7 +237,7 @@ export const DirectDetail: Story = {
     finishLoading();
     await expect(await canvas.findByRole('heading', { name: 'Morty Smith' })).toBeVisible();
     await expect(canvas.getByText('Species')).toBeVisible();
-    await userEvent.click(canvas.getByRole('link', { name: 'Characters' }));
+    await clickAndFlushUpdates(userEvent, canvas.getByRole('link', { name: 'Characters' }));
     await expect(await canvas.findByRole('link', { name: /Rick Sanchez.*Human/ })).toBeVisible();
   },
 };
@@ -165,7 +248,7 @@ export const NetworkFailure: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByRole('alert')).toHaveTextContent('Unable to load content');
     await expect(canvas.getByRole('alert')).toHaveTextContent('Check your connection');
-    await userEvent.click(canvas.getByRole('link', { name: 'Go Home' }));
+    await clickAndFlushUpdates(userEvent, canvas.getByRole('link', { name: 'Go Home' }));
     await expect(await canvas.findByRole('button', { name: 'Explore Characters' })).toBeVisible();
   },
 };
@@ -182,7 +265,7 @@ export const OfflineList: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByRole('alert')).toHaveTextContent("You're offline");
     await expect(canvas.getByRole('alert')).toHaveTextContent('This content is not available offline');
-    await userEvent.click(canvas.getByRole('link', { name: 'Go Home' }));
+    await clickAndFlushUpdates(userEvent, canvas.getByRole('link', { name: 'Go Home' }));
     await expect(await canvas.findByRole('button', { name: 'Explore Characters' })).toBeVisible();
   },
 };
@@ -253,7 +336,7 @@ export const RemovedLogin: Story = {
     await expect(await canvas.findByRole('heading', { name: '404' })).toBeVisible();
     await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
     await expect(canvas.queryByText(/^(login|signup|signout)$/i)).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('link', { name: 'Go Home' }));
+    await clickAndFlushUpdates(userEvent, canvas.getByRole('link', { name: 'Go Home' }));
     await expect(await canvas.findByRole('button', { name: 'Explore Characters' })).toBeVisible();
   },
 };

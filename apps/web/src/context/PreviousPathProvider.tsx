@@ -1,12 +1,6 @@
-import React, { createContext, useState } from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router';
-
-type PreviousPathContextType = {
-  currentPath: string | null;
-  previousPath: string | null;
-};
-
-export const PreviousPathContext = createContext<PreviousPathContextType | null>(null);
+import { PreviousPathContext, type PreviousPathContextType } from './PreviousPathContext';
 
 export const PreviousPathProvider = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();

@@ -32,6 +32,31 @@ it('returns the requested page of character data', async () => {
   expect(result.results[0]?.name).toBe('Morty Smith');
 });
 
+it('follows the next-page address returned by the public API', async () => {
+  vi.stubGlobal('fetch', async (url: string) => {
+    if (url === 'https://rickandmortyapi.com/api/character') {
+      return Response.json({
+        info: { count: 2, pages: 2, next: 'https://rickandmortyapi.com/api/character?page=2', prev: null },
+        results: [{ id: 1, name: 'Rick Sanchez' }],
+      });
+    }
+    if (url === 'https://rickandmortyapi.com/api/character?page=2') {
+      return Response.json({
+        info: { count: 2, pages: 2, next: null, prev: 'https://rickandmortyapi.com/api/character' },
+        results: [{ id: 2, name: 'Morty Smith' }],
+      });
+    }
+    return new Response(null, { status: 404 });
+  });
+
+  const firstPage = await getItems('character');
+  if (!firstPage.info.next) throw new Error('Expected another page of characters');
+  const nextPage = await getItems('character', firstPage.info.next);
+
+  expect(nextPage.results).toEqual([{ id: 2, name: 'Morty Smith' }]);
+  expect(nextPage.info.next).toBeNull();
+});
+
 it('returns the requested character detail', async () => {
   vi.stubGlobal('fetch', async (url: string) =>
     url === 'https://rickandmortyapi.com/api/character/1'

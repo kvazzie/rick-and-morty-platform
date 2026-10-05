@@ -131,9 +131,9 @@ vp hooks enable --hooks-dir .vite-hooks
 
 Hooks provide local feedback. Full checks run directly through the project commands regardless of hook
 state. Authoritative GitHub Actions and branch protection are tracked in
-[issue #14](https://github.com/kvazzie/rick-and-morty-platform/issues/14). Existing application lint and
-type errors remain visible during the migration; the application baseline work is tracked in
-[issue #12](https://github.com/kvazzie/rick-and-morty-platform/issues/12).
+[issue #14](https://github.com/kvazzie/rick-and-morty-platform/issues/14). The local application baseline checks formatting,
+type-aware linting with warnings denied, types, public browsing behavior, coverage generation, and the production build.
+See [the clean-checkout validation sequence](TESTING.md#baseline-validation) to reproduce all checks without relying on hooks.
 
 ## Releases
 

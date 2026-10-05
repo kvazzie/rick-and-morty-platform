@@ -1,5 +1,5 @@
-import { PreviousPathProvider } from './PreviousPathContext';
-import { AuthorProvider } from './AuthorContext';
+import { PreviousPathProvider } from './PreviousPathProvider';
+import { AuthorProvider } from './AuthorProvider';
 import { UIProvider } from './UiContext';
 import { ServiceWorkerProvider } from './ServiceWorkerContext';
 
