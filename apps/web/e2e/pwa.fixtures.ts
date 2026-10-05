@@ -4,7 +4,7 @@ import { test as base, type Request, type Route } from 'playwright/test';
 import { startProductionServer, type ProductionServer } from './production-server.fixtures';
 
 type ResponseFixture = NonNullable<Parameters<Route['fulfill']>[0]>;
-type NetworkFixture = {
+export type NetworkFixture = {
   respond: (url: string | RegExp, response: ResponseFixture, method?: string) => void;
   setOffline: (offline: boolean) => Promise<void>;
   requests: Request[];

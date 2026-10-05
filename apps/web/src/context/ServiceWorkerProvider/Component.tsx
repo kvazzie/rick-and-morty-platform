@@ -3,11 +3,20 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export const ServiceWorkerProvider = ({ children }: { children: React.ReactNode }) => {
   const reloadRequested = useRef(false);
+  const reloadStarted = useRef(false);
   const [activatedElsewhere, setActivatedElsewhere] = useState(false);
+
+  function reloadOnce() {
+    // The registration can report control more than once during one activation.
+    if (reloadStarted.current) return;
+    reloadStarted.current = true;
+    window.location.reload();
+  }
+
   const registration = useRegisterSW({
     immediate: true,
     onNeedReload() {
-      if (reloadRequested.current) window.location.reload();
+      if (reloadRequested.current) reloadOnce();
       else setActivatedElsewhere(true);
     },
   });
@@ -16,7 +25,7 @@ export const ServiceWorkerProvider = ({ children }: { children: React.ReactNode 
 
   function acceptUpdate() {
     reloadRequested.current = true;
-    if (activatedElsewhere) window.location.reload();
+    if (activatedElsewhere) reloadOnce();
     else void registration.updateServiceWorker(true);
   }
 

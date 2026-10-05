@@ -157,6 +157,12 @@ conditions and use Playwright's retrying assertions rather than fixed sleeps. Re
 `test.use({ reducedMotion: 'reduce' })` and assert navigation and content. Keep private React state and generated worker
 implementation details outside assertions.
 
+The production suite covers Chromium installability diagnostics and decoded manifest icons, public browsing with
+browser history, reduced-motion animation suppression, refreshed character data and images on offline startup,
+cached lists and details, offline cache misses and reconnect recovery, and update deferral and activation across tabs.
+Cache-policy cases first prove each request works online, then verify its offline result with a cached public read as
+a positive control. Cross-origin response fixtures expose `Vary` so the worker can inspect it through CORS.
+
 ## Commands
 
 Run these from the repository root. The test and Storybook scripts explicitly select Node 22 and pnpm 10.29.3, matching the project pins.
