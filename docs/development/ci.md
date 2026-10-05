@@ -11,7 +11,9 @@ Each job starts from a clean checkout. Application checks and environment checks
   including when tests fail and produce reports. No coverage threshold is added.
 - **Flake and Devenv checks** installs Nix with flakes enabled, evaluates `flake.lock` without updating it, and runs
   `bash scripts/test-environment.sh`. The existing native suite constructs the pinned Devenv shell and verifies startup
-  behavior. The flake's declared public binary cache is accepted without a cache-upload credential.
+  behavior. Flake checking permits builds during evaluation because the pinned Devenv input imports a patched package
+  expression from a derivation; `--no-build` would prevent that on a fresh store. The flake's declared public binary cache
+  is accepted without a cache-upload credential.
 - **Quality gate** requires both jobs to succeed, installs the same locked dependencies, builds the production PWA once
   without task caching, and runs the production browser suite against that existing build. It fails if an upstream job
   fails or is skipped. Browser failures retain traces and screenshots for seven days.

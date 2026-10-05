@@ -68,7 +68,7 @@ jobs:
             experimental-features = nix-command flakes
             accept-flake-config = true
       - name: Evaluate the locked flake
-        run: nix flake check --impure --no-update-lock-file --no-build
+        run: nix flake check --impure --no-update-lock-file
       - name: Construct Devenv and test shell behavior
         run: bash scripts/test-environment.sh
 
