@@ -16,3 +16,8 @@ Single-context (one `CONTEXT.md` + `docs/adr/` at the repo root). See `docs/agen
 
 When creating or changing tests, test infrastructure, or test dependencies, read `TESTING.md` first. It defines test
 boundaries, runner, layout, style, and commands.
+
+### Components
+
+When creating, moving, or changing React components, pages, providers, or their exports, read
+`docs/development/components.md` for directory layout, filenames, and public exports.

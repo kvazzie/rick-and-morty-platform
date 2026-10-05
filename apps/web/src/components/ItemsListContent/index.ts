@@ -1,0 +1,1 @@
+export { ItemsListContent } from './Component';
