@@ -240,7 +240,7 @@ The root `AGENTS.md` points here and to the component structure document.
 
 ## CI
 
-`.github/workflows/quality.yml` validates pull requests into `dev` and `main`, pushes to those branches, and manual runs.
+`.github/workflows/quality.yml` validates pull requests into `dev` and `main`, pushes to `main`, and manual runs.
 The application job installs locked dependencies, provisions the pinned Chromium and its OS libraries, runs `vp check`,
 and runs all application suites with coverage. Coverage reports are retained as workflow artifacts. The separate environment
 job installs Nix with flakes enabled, evaluates the locked flake, and runs `bash scripts/test-environment.sh`.

@@ -1,8 +1,12 @@
 # Repository quality in CI
 
-`.github/workflows/quality.yml` runs on pull requests targeting `dev` or `main`, pushes to those branches, and manual
+`.github/workflows/quality.yml` runs on pull requests targeting `dev` or `main`, pushes to `main`, and manual
 dispatch. Feature pull requests target `dev`; release pull requests promote `dev` to `main` as described in
 [branch flow](branch-flow.md). The workflow has no path filters, so documentation and dependency changes also receive checks.
+
+`dev` requires pull requests and the Quality gate, so merging a checked pull request does not trigger another quality run
+on `dev`. Push checks on `main` validate direct hotfixes and produce the release artifact for the actual branch commit.
+Merging a release pull request therefore still triggers a `main` push run.
 
 Each job starts from a clean checkout. Application checks and environment checks run in parallel:
 
@@ -20,7 +24,7 @@ Each job starts from a clean checkout. Application checks and environment checks
 
 Use the stable **Quality gate** check when configuring required checks on `dev` and `main`. Local hooks are optional and
 cannot replace CI. Workflow jobs have explicit timeouts, read-only repository permissions, and checkouts do not retain Git
-credentials. New commits cancel superseded pull-request runs. Push runs on each protected branch are serialized separately
+credentials. New commits cancel superseded pull-request runs. Push runs on `main` are serialized separately
 from pull-request runs so a pull-request update cannot cancel branch validation.
 
 ## Validated artifact
