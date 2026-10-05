@@ -1,0 +1,122 @@
+name: Repository quality
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CI: 'true'
+
+jobs:
+  application:
+    name: Application checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          node-version-file: .node-version
+          run-install: false
+          cache: true
+      - name: Install locked dependencies
+        run: vp env exec --node 22 --package-manager pnpm@10.29.3 vp install --frozen-lockfile
+      - name: Install pinned Chromium and browser libraries
+        run: vp env exec --node 22 --package-manager pnpm@10.29.3 vp exec --filter @rick-and-morty-platform/web playwright install --with-deps chromium
+      - name: Check formatting, lint, and types
+        run: vp env exec --node 22 --package-manager pnpm@10.29.3 -- vp check
+      - name: Run application tests with coverage
+        id: tests
+        run: vp run test:coverage
+      - name: Retain coverage reports
+        if: ${{ !cancelled() && steps.tests.outcome != 'skipped' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-${{ github.sha }}
+          path: apps/web/coverage/
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 14
+
+  environment:
+    name: Flake and Devenv checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+      - name: Evaluate the locked flake
+        run: nix flake check --impure --no-update-lock-file --no-build
+      - name: Construct Devenv and test shell behavior
+        run: bash scripts/test-environment.sh
+
+  quality:
+    name: Quality gate
+    needs: [application, environment]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Require every upstream check to pass
+        env:
+          APPLICATION_RESULT: ${{ needs.application.result }}
+          ENVIRONMENT_RESULT: ${{ needs.environment.result }}
+        run: |
+          test "$APPLICATION_RESULT" = success
+          test "$ENVIRONMENT_RESULT" = success
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          node-version-file: .node-version
+          run-install: false
+          cache: true
+      - name: Install locked dependencies
+        run: vp env exec --node 22 --package-manager pnpm@10.29.3 vp install --frozen-lockfile
+      - name: Install pinned Chromium and browser libraries
+        run: vp env exec --node 22 --package-manager pnpm@10.29.3 vp exec --filter @rick-and-morty-platform/web playwright install --with-deps chromium
+      - name: Build the production PWA once
+        run: vp env exec --node 22 --package-manager pnpm@10.29.3 -- vp run --no-cache build
+      - name: Smoke-test the production artifact
+        id: smoke
+        run: vp run test:e2e:prebuilt
+      - name: Retain browser failure diagnostics
+        if: ${{ failure() && steps.smoke.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: browser-failures-${{ github.sha }}
+          path: apps/web/test-results/e2e/
+          if-no-files-found: warn
+          overwrite: true
+          retention-days: 7
+      - name: Publish the validated static PWA
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: static-pwa-${{ github.sha }}
+          path: apps/web/dist/
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 14
