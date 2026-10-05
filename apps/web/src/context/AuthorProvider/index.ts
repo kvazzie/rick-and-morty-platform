@@ -1,0 +1,1 @@
+export { AuthorProvider } from './Component';

@@ -22,9 +22,7 @@ const config: StorybookConfig = {
       define: { 'import.meta.vitest': 'undefined' },
       resolve: {
         alias: {
-          'virtual:pwa-register/react': fileURLToPath(
-            new URL('../src/pages/pwa-register.test-helpers.ts', import.meta.url)
-          ),
+          'virtual:pwa-register/react': fileURLToPath(new URL('../src/pwa-register.fixtures.ts', import.meta.url)),
         },
       },
     }),

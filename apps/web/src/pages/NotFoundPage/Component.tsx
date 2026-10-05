@@ -1,0 +1,32 @@
+import { Link as RouterLink, useRouteError } from 'react-router';
+import { usePreviousPath } from '../../hooks/usePreviousPath';
+import { Link } from '@heroui/link';
+import { OfflineError, RequestError } from '../../api/index';
+
+export const NotFoundPage = () => {
+  const err = useRouteError();
+  const { previousPath } = usePreviousPath();
+  const isRequestFailed = err instanceof RequestError;
+  const isOffline = err instanceof OfflineError;
+
+  return (
+    <div
+      role={isRequestFailed ? 'alert' : undefined}
+      className="flex flex-col items-center justify-center min-h-[calc(100vh-150px)] text-center p-4"
+    >
+      <h1 className="text-4xl font-bold text-red-500 mb-4">
+        {isOffline ? "You're offline" : isRequestFailed ? 'Unable to load content' : '404'}
+      </h1>
+      <p className="text-2xl text-gray-300 mb-8">
+        {isOffline
+          ? err.message
+          : isRequestFailed
+            ? 'The request failed. Check your connection and try again later.'
+            : "Oops! The page you're looking for doesn't exist."}
+      </p>
+      <Link as={RouterLink} to={previousPath || '/'}>
+        {previousPath ? 'Go Back' : 'Go Home'}
+      </Link>
+    </div>
+  );
+};

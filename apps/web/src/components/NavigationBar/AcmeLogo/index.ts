@@ -1,0 +1,1 @@
+export { AcmeLogo } from './Component';

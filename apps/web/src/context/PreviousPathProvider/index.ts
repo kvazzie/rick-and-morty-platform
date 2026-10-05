@@ -1,0 +1,1 @@
+export { PreviousPathProvider } from './Component';

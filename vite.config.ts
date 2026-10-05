@@ -9,7 +9,7 @@ export default defineConfig({
     env: {
       builtin: true,
     },
-    ignorePatterns: ['**/dist/**', '**/dev-dist/**'],
+    ignorePatterns: ['**/dist/**', '**/dev-dist/**', '**/test-results/**'],
     overrides: [
       {
         files: ['apps/web/**/*.{ts,tsx}'],
@@ -122,6 +122,11 @@ export default defineConfig({
           browser: true,
         },
       },
+      {
+        files: ['apps/web/**/*.fixtures.ts', 'apps/web/**/*.fixtures.tsx'],
+        plugins: ['react'],
+        rules: { 'react/only-export-components': 'off' },
+      },
     ],
     options: {
       typeAware: true,
@@ -139,7 +144,7 @@ export default defineConfig({
     },
   },
   fmt: {
-    ignorePatterns: ['**/dist/**', '**/dev-dist/**'],
+    ignorePatterns: ['**/dist/**', '**/dev-dist/**', '**/test-results/**'],
     // Oxfmt does not read EditorConfig's quote_type.
     singleQuote: true,
     trailingComma: 'es5',

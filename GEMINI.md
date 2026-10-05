@@ -32,7 +32,7 @@ The project is managed with pnpm. Run these root `package.json` commands from th
 
 ## Development Conventions
 
-- **Component-Based Architecture:** The web code is organized into components (`apps/web/src/components`), pages (`apps/web/src/pages`), and a main layout (`apps/web/src/components/Layout.tsx`).
+- **Component-Based Architecture:** The web code is organized into components (`apps/web/src/components`), pages (`apps/web/src/pages`), and a main layout (`apps/web/src/components/Layout/Component.tsx`).
 - **Routing:** The web workspace uses React Router.
 - **State Management:** React Context (`apps/web/src/context`) provides UI, previous-path, author, and service-worker state.
 - **Data Fetching:** Custom hooks (`apps/web/src/hooks`) are used to fetch data from the API.

@@ -14,7 +14,9 @@
     "test:watch": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 vp test watch",
     "test:coverage": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 vp test run --coverage",
     "storybook": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 vp exec storybook dev --port 6006 --no-open --disable-telemetry",
-    "storybook:build": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 vp exec storybook build --disable-telemetry"
+    "storybook:build": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 vp exec storybook build --disable-telemetry",
+    "test:e2e": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 -- vp run --no-cache build && vp run --no-cache test:e2e:prebuilt",
+    "test:e2e:prebuilt": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 -- vp exec playwright test"
   },
   "dependencies": {
     "@heroui/avatar": "^2.2.21",
@@ -38,6 +40,7 @@
   "devDependencies": {
     "@storybook/addon-vitest": "10.6.1",
     "@storybook/react-vite": "10.6.1",
+    "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vite-pwa/assets-generator": "^1.0.2",
