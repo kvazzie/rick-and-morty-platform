@@ -5,7 +5,7 @@ dispatch. Feature pull requests target `dev`; release pull requests promote `dev
 [branch flow](branch-flow.md). The workflow has no path filters, so documentation and dependency changes also receive checks.
 
 `dev` requires pull requests and the Quality gate, so merging a checked pull request does not trigger another quality run
-on `dev`. Push checks on `main` validate direct hotfixes and produce the release artifact for the actual branch commit.
+on `dev`. Push checks on `main` validate promoted changes and checked hotfixes and produce the release artifact for the actual branch commit.
 Merging a promotion pull request therefore still triggers a `main` push run.
 
 Each job starts from a clean checkout. Application checks and environment checks run in parallel:
@@ -33,8 +33,8 @@ Only a successful Quality gate uploads `static-pwa-<commit SHA>`. The artifact c
 including the manifest, service worker, icons, and compiled assets. It is retained for 14 days. Coverage and failure
 diagnostics are separate artifacts and are not deployable builds.
 
-Later release and deployment jobs must download this artifact from the successful run for their exact source commit and
-deploy that directory without rebuilding. Pull-request artifacts validate GitHub's test merge commit; release and deployment
+Jobs distributing or deploying the PWA must download this artifact from the successful run for their exact source commit
+and use that directory without rebuilding. Pull-request artifacts validate GitHub's test merge commit; release and deployment
 must use the artifact from the corresponding branch push. A manual rerun produces a fresh validation of its selected ref.
 The GitHub release job runs only after a successful Quality gate on a push to `main`.
 It checks out that exact source SHA, skips a superseded commit or an existing release,
