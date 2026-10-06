@@ -5,10 +5,10 @@ needs a release adds `.changeset/<name>.md` with a workspace, a version bump, an
 release notes. Create one with `vp run changeset`. Conventional Commits remain the
 repository's commit convention, but do not determine release versions or notes.
 
-The current web workspace and root start at `0.0.0`. The initial major changeset
-prepares `1.0.0`; it is consumed in the implementation PR so the first promotion
-already has reviewed version metadata. Later changesets request major, minor, or
-patch increments explicitly.
+The implementation PR consumed an explicit major changeset from the initial
+`0.0.0` baseline and committed `1.0.0` in the root and web manifests with the first
+changelog entry. The first promotion therefore carries reviewed release metadata.
+Later changesets request major, minor, or patch increments explicitly.
 
 ## One private release train
 
