@@ -3,6 +3,13 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+function readGitHub(endpoint) {
+  const result = spawnSync('gh', ['api', endpoint], { encoding: 'utf8' });
+  if (result.status === 0) return JSON.parse(result.stdout);
+  if (result.stderr?.includes('HTTP 404')) return undefined;
+  throw new Error(result.stderr || 'Unable to read GitHub release metadata.');
+}
+
 const root = new URL('..', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('package.json', root), 'utf8'));
 const web = JSON.parse(readFileSync(new URL('apps/web/package.json', root), 'utf8'));
@@ -30,7 +37,11 @@ const sha =
 if (process.argv.includes('--dry-run')) {
   console.log(JSON.stringify({ version: manifest.version, tag, sha, notes }, null, 2));
 } else {
-  if (process.env.GITHUB_REF !== 'refs/heads/main' || !process.env.GITHUB_REPOSITORY) {
+  if (
+    process.env.GITHUB_REF !== 'refs/heads/main' ||
+    process.env.GITHUB_EVENT_NAME !== 'push' ||
+    !process.env.GITHUB_REPOSITORY
+  ) {
     throw new Error('Releases can only be created by the main push workflow.');
   }
   const repo = process.env.GITHUB_REPOSITORY;
@@ -40,12 +51,28 @@ if (process.argv.includes('--dry-run')) {
   if (head !== sha) {
     console.log('Skipping a superseded main commit.');
   } else {
-    const existing = spawnSync('gh', ['api', `repos/${repo}/releases/tags/${tag}`], { encoding: 'utf8' });
-    if (existing.status === 0) {
+    const existing = readGitHub(`repos/${repo}/releases/tags/${tag}`);
+    if (existing) {
       console.log(`${tag} is already released.`);
     } else {
-      if (!existing.stderr?.includes('HTTP 404')) {
-        throw new Error(existing.stderr || 'Unable to check the existing release.');
+      const ref = readGitHub(`repos/${repo}/git/ref/tags/${tag}`);
+      if (ref) {
+        let object = ref.object;
+        const visited = new Set();
+        while (object.type === 'tag' && !visited.has(object.sha)) {
+          visited.add(object.sha);
+          object = readGitHub(`repos/${repo}/git/tags/${object.sha}`)?.object;
+          if (!object) throw new Error(`Unable to resolve ${tag}.`);
+        }
+        if (object.type !== 'commit' || object.sha !== sha) {
+          throw new Error(`${tag} does not point to the validated commit ${sha}.`);
+        }
+      } else {
+        execFileSync(
+          'gh',
+          ['api', '--method', 'POST', `repos/${repo}/git/refs`, '-f', `ref=refs/tags/${tag}`, '-f', `sha=${sha}`],
+          { stdio: 'inherit' }
+        );
       }
       const directory = mkdtempSync(join(tmpdir(), 'platform-release-'));
       try {
@@ -53,7 +80,7 @@ if (process.argv.includes('--dry-run')) {
         writeFileSync(notesFile, notes);
         execFileSync(
           'gh',
-          ['release', 'create', tag, '--repo', repo, '--target', sha, '--title', tag, '--notes-file', notesFile],
+          ['release', 'create', tag, '--repo', repo, '--verify-tag', '--title', tag, '--notes-file', notesFile],
           { stdio: 'inherit' }
         );
       } finally {
