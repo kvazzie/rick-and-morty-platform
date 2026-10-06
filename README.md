@@ -139,6 +139,11 @@ See [the clean-checkout validation sequence](TESTING.md#baseline-validation) to 
 
 ## Releases
 
-The root `package.json` owns the repository version. Workspace packages are private and unversioned, which prevents
-them from drifting into independent release lines. Releases use one root changelog and never publish a workspace to
-npm.
+Changesets records explicit release notes and version bumps with `vp run changeset`.
+The private workspace group shares one version. The root `package.json` and `CHANGELOG.md`
+follow the current web workspace, keeping one repository release train.
+
+A checked version PR lands on `dev` before a short-lived promotion PR brings `dev`
+into `main`. After the promoted commit passes CI, automation creates its `v<version>`
+tag and GitHub release. Every workspace stays private, and no workflow publishes to npm.
+See [release operation](docs/development/releases.md) for dry runs and branch requirements.
