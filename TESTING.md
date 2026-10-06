@@ -240,10 +240,17 @@ The root `AGENTS.md` points here and to the component structure document.
 
 ## CI
 
-Workflow creation remains deferred to the CI issue. Future CI must install application dependencies, run the documented
-application suites, provision the pinned Chromium and its OS libraries, and retain coverage reports as artifacts. After building once, CI must run `vp run test:e2e:prebuilt` against the exact artifact later deployed. An absolute `E2E_ARTIFACT_DIR` can select an unpacked artifact. Retain `apps/web/test-results/e2e` failure traces and screenshots. E2E failures and empty discovery fail validation. This setup adds no CI workflow; issue #14 owns that work. The
-separate environment job installs Nix with flakes enabled and runs `bash scripts/test-environment.sh`. A nonzero result
-fails the job. Local hooks do not substitute for these checks.
+`.github/workflows/quality.yml` validates pull requests into `dev` and `main`, pushes to `main`, and manual runs.
+The application job installs locked dependencies, provisions the pinned Chromium and its OS libraries, runs `vp check`,
+and runs all application suites with coverage. Coverage reports are retained as workflow artifacts. The separate environment
+job installs Nix with flakes enabled, evaluates the locked flake, and runs `bash scripts/test-environment.sh`.
+
+After both jobs pass, the Quality gate builds once without task caching and runs `vp run test:e2e:prebuilt` against that
+exact artifact. Only a passing browser suite publishes the static PWA artifact for later release and deployment jobs.
+An absolute `E2E_ARTIFACT_DIR` can select an unpacked artifact. Browser failures retain `apps/web/test-results/e2e` traces
+and screenshots. E2E failures and empty discovery fail validation. The Quality gate also fails when an upstream check fails
+or is skipped. Local hooks do not substitute for these checks. See [CI operation](docs/development/ci.md) for check names,
+artifact identity and retention, permissions, concurrency, and weekly dependency updates.
 
 ## Disposable diagnostics
 
