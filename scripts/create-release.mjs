@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+/** Read JSON metadata, treating HTTP 404 as absent and failing on other API errors. */
 function readGitHub(endpoint) {
   const result = spawnSync('gh', ['api', endpoint], { encoding: 'utf8' });
   if (result.status === 0) return JSON.parse(result.stdout);
