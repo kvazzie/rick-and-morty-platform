@@ -45,7 +45,8 @@ this job gets `contents: write`; validation jobs keep read-only permissions.
 
 `.github/workflows/changesets.yml` prepares version PRs on `dev` pushes. It does not
 publish releases or packages. Changesets updates the private workspace versions,
-synchronizes the root version and changelog, and commits the metadata in a PR
+synchronizes the root version, writes the root changelog through the workspace
+symlink, and commits the metadata in a PR
 against `dev`. Only this job gets content, PR, and workflow-dispatch write access.
 
 Bot-created pull requests do not trigger `pull_request` workflows with the built-in

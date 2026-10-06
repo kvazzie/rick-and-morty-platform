@@ -17,9 +17,9 @@ allows private package versioning. Package tagging is disabled. There is no
 Changesets publish command, registry credential, or npm publishing job.
 
 Changesets natively versions workspace packages. `vp run release:version` uses
-that CLI, synchronizes the root version with the current web workspace, and moves
-the generated changelog back to the root. It seeds the workspace changelog from
-the root first, preserving earlier notes. Only one changelog is committed.
+that CLI and synchronizes the root version with the current web workspace.
+`apps/web/CHANGELOG.md` links to the root changelog, so the CLI and version action
+can use their native workspace path while keeping one changelog and its history.
 Future applications must extend this root-changelog policy when they are added.
 
 ## Preparation, promotion, and release
