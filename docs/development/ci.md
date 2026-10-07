@@ -44,9 +44,10 @@ missing release notes. It never publishes npm packages or rebuilds the PWA. Only
 this job gets `contents: write`; validation jobs keep read-only permissions.
 
 The deployment job then downloads this run's validated artifact and deploys it
-through Void in SPA mode. It uses the `VOID_TOKEN` repository secret and the
-`VOID_PROJECT` and `VOID_API_URL` repository variables. It connects to the selected
-Void platform noninteractively before deployment. The live browser check compares the public
+through Void directly to Cloudflare in SPA mode. It uses the `CLOUDFLARE_API_TOKEN`
+repository secret and the `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_WORKERS_SUBDOMAIN`
+repository variables. The Worker name is fixed in `apps/web/void.config.ts`.
+The live browser check compares the public
 PWA files with the artifact and checks character browsing and direct detail
 entry. See [deployment setup and verification](deployment.md).
 

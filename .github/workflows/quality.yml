@@ -131,8 +131,8 @@ jobs:
       contents: read
       actions: read
     env:
-      VOID_PROJECT: ${{ vars.VOID_PROJECT }}
-      VOID_API_URL: ${{ vars.VOID_API_URL }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_WORKERS_SUBDOMAIN: ${{ vars.CLOUDFLARE_WORKERS_SUBDOMAIN }}
     steps:
       - name: Deploy only the current main commit
         id: current
@@ -169,32 +169,34 @@ jobs:
         id: void
         if: ${{ steps.current.outputs.deploy == 'true' }}
         env:
-          VOID_TOKEN: ${{ secrets.VOID_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          : "${VOID_TOKEN:?Set the VOID_TOKEN repository secret}"
-          : "${VOID_PROJECT:?Set the VOID_PROJECT repository variable}"
-          : "${VOID_API_URL:?Set the VOID_API_URL repository variable}"
+          : "${CLOUDFLARE_API_TOKEN:?Set the CLOUDFLARE_API_TOKEN repository secret}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?Set the CLOUDFLARE_ACCOUNT_ID repository variable}"
+          : "${CLOUDFLARE_WORKERS_SUBDOMAIN:?Set the CLOUDFLARE_WORKERS_SUBDOMAIN repository variable}"
           test -f apps/web/dist/client/index.html
           test -f apps/web/dist/client/sw.js
           test -f apps/web/dist/client/manifest.webmanifest
-          vp env exec --node 24 --package-manager pnpm@10.29.3 -- vp exec --filter @rick-and-morty-platform/web void connect "$VOID_API_URL" --no-login
-          vp env exec --node 24 --package-manager pnpm@10.29.3 -- vp exec --filter @rick-and-morty-platform/web void deploy --platform void --project "$VOID_PROJECT" --dir dist/client --spa
+          vp env exec --node 24 --package-manager pnpm@10.29.3 -- vp exec --filter @rick-and-morty-platform/web void deploy --platform cloudflare --dir dist/client --spa
           vp env exec --node 24 --package-manager pnpm@10.29.3 -- node --input-type=module <<'NODE'
           import { appendFileSync, readFileSync, readdirSync } from 'node:fs';
           import { homedir } from 'node:os';
           import { join } from 'node:path';
+          import config from './apps/web/void.config.ts';
           const directory = join(homedir(), '.void', 'logs');
           const filename = readdirSync(directory).filter(name => /^deploy-.*\.jsonl$/.test(name)).sort().at(-1);
           if (!filename) throw new Error('Void did not write a deployment log.');
           const events = readFileSync(join(directory, filename), 'utf8').trim().split('\n').map(line => JSON.parse(line));
-          const success = events.findLast(event => event.msg === 'deploy_success');
-          if (!success || !events.some(event => event.msg === 'deploy_end' && event.ok)) {
-            throw new Error('Void did not confirm a published deployment.');
+          const success = events.findLast(event => event.msg === 'cloudflare_deploy_end');
+          const end = events.findLast(event => event.msg === 'deploy_end');
+          if (success?.ok !== true || end?.ok !== true || success.worker !== config.cloudflare.name || typeof success.versionId !== 'string' || !success.versionId) {
+            throw new Error('Void did not confirm a published Cloudflare deployment for the configured Worker.');
           }
-          const url = new URL(success.url);
-          if (url.protocol !== 'https:') throw new Error('Void returned a non-HTTPS deployment URL.');
+          const subdomain = process.env.CLOUDFLARE_WORKERS_SUBDOMAIN.trim().toLowerCase().replace(/\.workers\.dev$/, '');
+          if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(subdomain)) throw new Error('Invalid Cloudflare account workers.dev subdomain.');
+          const url = new URL(`https://${success.worker}.${subdomain}.workers.dev`);
           appendFileSync(process.env.GITHUB_OUTPUT, `url=${url.origin}\n`);
-          appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Deployed ${process.env.GITHUB_SHA} to ${url.origin}\n`);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Deployed ${process.env.GITHUB_SHA} as Cloudflare Worker version ${success.versionId} to ${url.origin}\n`);
           NODE
       - name: Install pinned Chromium and browser libraries
         if: ${{ steps.current.outputs.deploy == 'true' }}

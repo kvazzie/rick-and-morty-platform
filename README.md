@@ -150,5 +150,5 @@ See [release operation](docs/development/releases.md) for dry runs and branch re
 
 After release, CI deploys the validated browser artifact through Void as a static
 SPA and checks the public character-browsing flow. See
-[deployment setup](docs/development/deployment.md) for first-time sign-in,
-`VOID_TOKEN`, `VOID_PROJECT`, `VOID_API_URL`, and the live smoke-check command.
+[deployment setup](docs/development/deployment.md) for Cloudflare account setup,
+`CLOUDFLARE_API_TOKEN`, account variables, and the live smoke-check command.
