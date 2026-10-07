@@ -54,3 +54,4 @@ test-results/
 # Generated Void runtime state and deployment metadata
 .void/
 .wrangler/
+.void-wrangler.jsonc

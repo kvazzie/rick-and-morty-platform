@@ -45,7 +45,8 @@ this job gets `contents: write`; validation jobs keep read-only permissions.
 
 The deployment job then downloads this run's validated artifact and deploys it
 through Void in SPA mode. It uses the `VOID_TOKEN` repository secret and the
-`VOID_PROJECT` repository variable. The live browser check compares the public
+`VOID_PROJECT` and `VOID_API_URL` repository variables. It connects to the selected
+Void platform noninteractively before deployment. The live browser check compares the public
 PWA files with the artifact and checks character browsing and direct detail
 entry. See [deployment setup and verification](deployment.md).
 

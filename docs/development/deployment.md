@@ -5,17 +5,18 @@ Quality gate and GitHub release jobs succeed on a push to `main`. Pull requests
 and manual quality runs validate without deploying. Superseded `main` commits
 are skipped, and the workflow serializes `main` push runs.
 
-Void is pinned to `0.10.13` in the web workspace. This version supports the
-project's Node 22 runtime; Void `0.20.0` and newer require Node 24.21.0.
-Use the installed CLI's `void --help` for this version's commands. The current
-online documentation describes a newer CLI and deployment setup.
+Void is pinned to `0.26.0` in the web workspace. It requires Node 24.21.0 or
+later. The project selects the Node 24 release line in `.node-version` and
+requires at least 24.21.0 through `package.json`. Static SPA settings live in
+`apps/web/void.config.ts`.
 
 The Vite plugin produces the browser PWA in `apps/web/dist/client`. The Quality
 gate tests that directory and uploads its contents as `static-pwa-<commit SHA>`.
 Deployment downloads that artifact from the same workflow run, checks out the
-same SHA, and passes `--dir dist/client --spa` to the locked Void CLI in the web
-workspace. It does not run a build. Generated worker output in `dist/ssr` is
-excluded from the artifact and deployment.
+same SHA, connects to the selected platform without interactive login, and
+passes `--platform void --dir dist/client --spa` to the locked Void CLI in the
+web workspace. It does not run a build. Generated worker output in `dist/ssr`
+is excluded from the artifact and deployment.
 
 ## First deployment
 
@@ -23,26 +24,34 @@ The repository's web workspace and a Void hosting project are separate things.
 The hosting project gives the application its public address. Configure these
 repository settings before promoting the first release to `main`:
 
-| GitHub Actions setting  | Value                                                            |
-| ----------------------- | ---------------------------------------------------------------- |
-| Secret `VOID_TOKEN`     | Void authentication token                                        |
-| Variable `VOID_PROJECT` | Explicit hosting project slug, such as `rick-and-morty-platform` |
+| GitHub Actions setting  | Value                                                          |
+| ----------------------- | -------------------------------------------------------------- |
+| Secret `VOID_TOKEN`     | Project-scoped deployment credential                           |
+| Variable `VOID_PROJECT` | Hosting project slug, such as `rick-and-morty-platform`        |
+| Variable `VOID_API_URL` | URL of the Void platform that issued the deployment credential |
 
-Sign in through the project's pinned CLI:
+Get the platform URL from its owner, then connect and sign in through the
+project's pinned CLI. Link the web workspace to an existing hosting project or
+create one through the project selector:
 
 ```sh
-vp env exec --node 22 --package-manager pnpm@10.29.3 -- vp exec --filter @rick-and-morty-platform/web void auth login
+vp env exec --node 24 --package-manager pnpm@10.29.3 -- vp exec --filter @rick-and-morty-platform/web void connect https://platform.example.com
+vp env exec --node 24 --package-manager pnpm@10.29.3 -- vp exec --filter @rick-and-morty-platform/web void project link
+vp env exec --node 24 --package-manager pnpm@10.29.3 -- vp exec --filter @rick-and-morty-platform/web void project token create --name github-actions --expires-in 30
 ```
 
-`void auth token` copies the signed-in token to the clipboard on systems with
-supported clipboard tooling. Store it under `VOID_TOKEN` in the repository's
-Actions secrets. Set `VOID_PROJECT` under Actions variables. With this CLI,
-an explicitly selected project that does not exist is created on its first
-noninteractive deployment. The account must have permission to create it.
+The final command prints the project token once. Store it under `VOID_TOKEN`
+in the repository's Actions secrets without posting it in chat or committing
+it. Set the linked project's slug as `VOID_PROJECT` and the platform URL as
+`VOID_API_URL` under Actions variables. Renew the token before it expires;
+the CLI accepts a lifetime of 1–90 days.
 
-The CLI uses Void's hosted, Cloudflare-backed platform. The workflow does not
-need a Cloudflare account credential or a direct Wrangler deployment command.
-Missing credentials or project selection fail the deployment job explicitly.
+Deployment uses the connected, Cloudflare-backed Void platform. The workflow
+does not need a Cloudflare account credential or a direct Wrangler deployment
+command. The current CLI requires the matching platform URL as well as the
+token, and a fresh CI runner must establish its platform connection. Missing
+settings fail the deployment job explicitly. See the official
+[Void authentication reference](https://void.cloud/reference/cli/auth).
 
 ## Verify the public application
 
@@ -60,7 +69,7 @@ retains the browser trace and screenshot for seven days.
 Run the same check locally against a live deployment and its matching artifact:
 
 ```sh
-DEPLOYMENT_URL=https://your-project.void.app \
+DEPLOYMENT_URL=https://public-app.example.com \
 E2E_ARTIFACT_DIR=/absolute/path/to/downloaded/artifact \
 vp run test:deployment
 ```

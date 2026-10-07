@@ -64,8 +64,8 @@ Open a new shell after installation. Follow the
 [live Nixpkgs Vite+ packaging search](https://github.com/NixOS/nixpkgs/issues?q=%22vite%2B%22)
 for native packaging progress.
 
-Vite+ selects Node 22 from `.node-version` and the pinned `pnpm@10.29.3` from `package.json`.
-Node 22.22.1 or later in the 22.x line supports staged checks. Enable Vite+'s environment management,
+Vite+ selects Node 24 from `.node-version` and the pinned `pnpm@10.29.3` from `package.json`.
+Void requires Node 24.21.0 or later in the 24.x line. Enable Vite+'s environment management,
 then install dependencies and run commands from the repository root:
 
 ```sh
@@ -151,4 +151,4 @@ See [release operation](docs/development/releases.md) for dry runs and branch re
 After release, CI deploys the validated browser artifact through Void as a static
 SPA and checks the public character-browsing flow. See
 [deployment setup](docs/development/deployment.md) for first-time sign-in,
-`VOID_TOKEN`, `VOID_PROJECT`, and the live smoke-check command.
+`VOID_TOKEN`, `VOID_PROJECT`, `VOID_API_URL`, and the live smoke-check command.

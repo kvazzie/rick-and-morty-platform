@@ -60,7 +60,7 @@ No personal token or deploy key is required.
 
 After the release job succeeds, Void deploys the validated static artifact and
 checks the public application in Chromium. This separate deployment job needs
-the `VOID_TOKEN` secret and `VOID_PROJECT` variable described in
+the `VOID_TOKEN` secret and `VOID_PROJECT` and `VOID_API_URL` variables described in
 [deployment setup](deployment.md).
 
 ## Dry runs
