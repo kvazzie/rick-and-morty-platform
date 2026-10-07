@@ -1,12 +1,11 @@
 # Branch flow
 
 `main` is the public release line. `dev` is the integration branch. Normal releases
-reach `main` through a release pull request from `dev`. The repository owner may
-push emergency hotfixes directly to `main`.
+reach `main` through a promotion pull request from `dev`.
 
-`dev` requires a pull request and a passing Quality gate for every change, including
-the owner's changes. `main` also requires pull requests and the Quality gate, with
-an owner bypass for hotfixes. Pull requests do not require another person's approval.
+`dev` and `main` require a pull request and a passing Quality gate for every change,
+including the owner's changes and release metadata. Changesets opens a checked
+version pull request instead of bypassing these requirements. Pull requests do not require another person's approval.
 Force pushes and branch deletion are blocked on both branches, including for the owner.
 
 ## Feature pull requests
@@ -43,30 +42,30 @@ gh stack sync --prune
 
 ## Releases
 
-When `dev` is ready, open a pull request whose head is `dev` and whose base is
-`main`:
+Changesets records explicit release intent in `.changeset/*.md`. The preparation
+workflow opens a version pull request against `dev` that updates versions and the
+root changelog and consumes those files. Merge that checked version PR first.
+The initial 1.0.0 metadata is prepared in the release-automation implementation PR.
+
+When the versioned `dev` is ready, open a short-lived promotion pull request whose
+head is `dev` and whose base is `main`:
 
 ```sh
 gh pr create --base main --head dev
 ```
 
-Merge that pull request with an explicit merge commit after its required checks
-pass. The merge makes the reviewed `dev` tree the public release tree while
-retaining the feature commits in its ancestry.
+Merge with an explicit merge commit after the Quality gate passes. The merge
+preserves implementation history. After the resulting `main` push passes its own
+Quality gate, automation creates the version tag and GitHub release.
 
-Do not create a long-lived release branch. Release automation may add versioning
-commits to `main`; do not merge those commits back into `dev`.
+Do not create a long-lived release branch or merge `main` back into `dev`.
+Version metadata already belongs to `dev`. See [release operation](releases.md).
 
 ## Hotfixes
 
-The repository owner may bypass the pull-request and check requirements on `main`
-for an emergency hotfix. A push still runs the quality workflow; it validates the
-change after the push and cannot prevent a failing hotfix from landing.
+Hotfixes also reach `main` through checked pull requests. There is no owner or
+release-automation bypass for pull requests, checks, force pushes, or deletion.
 
 Bring the hotfix into `dev` through a separate pull request so the next release
 retains the fix. Cherry-pick the hotfix onto a feature branch based on `dev` rather
 than bringing release automation commits into `dev`.
-
-This repository is owned by a personal account, which has owner and collaborator
-access rather than a separate Maintain role. If it moves to an organization,
-the hotfix bypass can be assigned to the Maintain role or a maintainer team.
