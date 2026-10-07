@@ -147,3 +147,8 @@ A checked version PR lands on `dev` before a short-lived promotion PR brings `de
 into `main`. After the promoted commit passes CI, automation creates its `v<version>`
 tag and GitHub release. Every workspace stays private, and no workflow publishes to npm.
 See [release operation](docs/development/releases.md) for dry runs and branch requirements.
+
+After release, CI deploys the validated browser artifact through Void as a static
+SPA and checks the public character-browsing flow. See
+[deployment setup](docs/development/deployment.md) for first-time sign-in,
+`VOID_TOKEN`, `VOID_PROJECT`, and the live smoke-check command.

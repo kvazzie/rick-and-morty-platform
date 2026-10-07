@@ -5,6 +5,7 @@ import { playwright } from 'vite-plus/test/browser-playwright';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { voidPlugin } from 'void';
 import { pwaAssets } from './pwa-assets.config';
 import {
   createOfflineCacheMissResponse,
@@ -24,6 +25,7 @@ export default defineConfig({
     : lazyPlugins(() => [
         react({ compiler: { target: '19', panicThreshold: 'all_errors' } }),
         tailwindcss(),
+        voidPlugin(),
         VitePWA({
           workbox: {
             // Include lazy route chunks so an unvisited route can render offline.

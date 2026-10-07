@@ -15,7 +15,7 @@ export const test = base.extend<{ productionServer: ProductionServer; network: N
     if (browserName !== 'chromium') throw new Error('Production PWA fixtures require the pinned Chromium browser');
     const directory = process.env.E2E_ARTIFACT_DIR;
     if (directory && !isAbsolute(directory)) throw new Error('E2E_ARTIFACT_DIR must be an absolute path');
-    const server = await startProductionServer(directory ?? fileURLToPath(new URL('../dist/', import.meta.url)));
+    const server = await startProductionServer(directory ?? fileURLToPath(new URL('../dist/client/', import.meta.url)));
     try {
       await provide(server);
     } finally {

@@ -122,7 +122,7 @@ case, serves the supplied production directory without altering its files, and s
 SPA fallback only for extensionless HTML navigation; missing assets return 404. Missing `index.html`, `sw.js`, or
 `manifest.webmanifest` fails setup. No development server or contributor's already-running server is reused.
 
-By default the artifact is `apps/web/dist`. `vp run test:e2e` builds it with the pinned runtime before running the suite.
+By default the artifact is `apps/web/dist/client`. `vp run test:e2e` builds it with the pinned runtime before running the suite.
 `vp run test:e2e:prebuilt` never builds. To consume another existing artifact, supply its absolute path:
 
 ```sh
@@ -130,6 +130,18 @@ E2E_ARTIFACT_DIR=/absolute/path/to/artifact vp run test:e2e:prebuilt
 ```
 
 Use `E2E_ARTIFACT_DIR` with the prebuilt command. For CI, build once, run the prebuilt suite, and deploy that same directory.
+
+The deployment smoke check uses the same production navigation boundary with real
+network requests. `e2e/deployment.test.ts` imports the base `playwright/test` runner
+directly so the local server and deterministic network fixtures do not intercept
+the deployed application. `playwright.deployment.config.ts` runs this file alone
+with `DEPLOYMENT_URL` as its origin. The normal production configuration excludes
+it. `vp run test:deployment` never builds and compares the served HTML, service
+worker, and manifest with `E2E_ARTIFACT_DIR`, defaulting to `dist/client`. It verifies
+home-to-character navigation and a detail reload with service workers blocked so
+the hosting platform must supply SPA fallback. Validate it locally against a
+loopback production server; release automation runs it against the confirmed Void
+URL. See [deployment verification](docs/development/deployment.md).
 
 The automatic `network` fixture keeps local artifact requests real and aborts unmatched external requests. Register literal
 external responses with `network.respond(urlOrRegExp, { json: data })`; an optional third argument restricts the HTTP method.

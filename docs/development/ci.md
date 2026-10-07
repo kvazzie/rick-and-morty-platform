@@ -29,7 +29,7 @@ from pull-request runs so a pull-request update cannot cancel branch validation.
 
 ## Validated artifact
 
-Only a successful Quality gate uploads `static-pwa-<commit SHA>`. The artifact contains the contents of `apps/web/dist`,
+Only a successful Quality gate uploads `static-pwa-<commit SHA>`. The artifact contains the contents of `apps/web/dist/client`,
 including the manifest, service worker, icons, and compiled assets. It is retained for 14 days. Coverage and failure
 diagnostics are separate artifacts and are not deployable builds.
 
@@ -42,6 +42,12 @@ and creates the tag and GitHub release from the committed version and changelog.
 It refuses unconsumed changesets, mismatched versions, non-private packages, and
 missing release notes. It never publishes npm packages or rebuilds the PWA. Only
 this job gets `contents: write`; validation jobs keep read-only permissions.
+
+The deployment job then downloads this run's validated artifact and deploys it
+through Void in SPA mode. It uses the `VOID_TOKEN` repository secret and the
+`VOID_PROJECT` repository variable. The live browser check compares the public
+PWA files with the artifact and checks character browsing and direct detail
+entry. See [deployment setup and verification](deployment.md).
 
 `.github/workflows/changesets.yml` prepares version PRs on `dev` pushes. It does not
 publish releases or packages. Changesets updates the private workspace versions,
