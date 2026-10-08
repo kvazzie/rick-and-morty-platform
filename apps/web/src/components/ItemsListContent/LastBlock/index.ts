@@ -1,0 +1,1 @@
+export { LastBlock } from './Component';

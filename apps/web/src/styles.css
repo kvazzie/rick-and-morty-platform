@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+@plugin "../hero.ts";
+
+@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+
+@custom-variant dark (&:is(.dark *));
+html,
+body {
+  @apply bg-gray-900;
+  /* background-color: #111827; */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

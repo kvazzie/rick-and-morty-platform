@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
+dev-dist
 dist-ssr
 *.local
 
@@ -25,3 +26,32 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# External skills are restored from skills-lock.json. Do not commit their copies.
+.claude/
+.agents/skills/*
+
+# If this project later owns a skill, unignore it explicitly:
+# !.agents/skills/my-skill/
+# !.agents/skills/my-skill/**
+
+# Vite+ task cache and generated hook dispatcher
+.vite/
+.vite-hooks/_/
+
+# Generated test reports and Storybook artifacts
+coverage/
+storybook-static/
+test-results/
+
+# Generated Void runtime state and deployment metadata
+.void/
+.wrangler/
+.void-wrangler.jsonc
