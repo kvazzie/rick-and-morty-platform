@@ -46,8 +46,8 @@ then run the maintenance checks from the root:
 ```sh
 vp env on
 vp install --frozen-lockfile
-vp env exec --node 22 --package-manager pnpm@10.29.3 vp exec --filter @rick-and-morty-platform/web playwright install chromium
-vp env exec --node 22 --package-manager pnpm@10.29.3 -- vp check
+vp env exec --node 24 --package-manager pnpm@10.29.3 vp exec --filter @rick-and-morty-platform/web playwright install chromium
+vp env exec --node 24 --package-manager pnpm@10.29.3 -- vp check
 vp run test
 vp run test:coverage
 ```
@@ -122,7 +122,7 @@ case, serves the supplied production directory without altering its files, and s
 SPA fallback only for extensionless HTML navigation; missing assets return 404. Missing `index.html`, `sw.js`, or
 `manifest.webmanifest` fails setup. No development server or contributor's already-running server is reused.
 
-By default the artifact is `apps/web/dist`. `vp run test:e2e` builds it with the pinned runtime before running the suite.
+By default the artifact is `apps/web/dist/client`. `vp run test:e2e` builds it with the pinned runtime before running the suite.
 `vp run test:e2e:prebuilt` never builds. To consume another existing artifact, supply its absolute path:
 
 ```sh
@@ -130,6 +130,18 @@ E2E_ARTIFACT_DIR=/absolute/path/to/artifact vp run test:e2e:prebuilt
 ```
 
 Use `E2E_ARTIFACT_DIR` with the prebuilt command. For CI, build once, run the prebuilt suite, and deploy that same directory.
+
+The deployment smoke check uses the same production navigation boundary with real
+network requests. `e2e/deployment.test.ts` imports the base `playwright/test` runner
+directly so the local server and deterministic network fixtures do not intercept
+the deployed application. `playwright.deployment.config.ts` runs this file alone
+with `DEPLOYMENT_URL` as its origin. The normal production configuration excludes
+it. `vp run test:deployment` never builds and compares the served HTML, service
+worker, and manifest with `E2E_ARTIFACT_DIR`, defaulting to `dist/client`. It verifies
+home-to-character navigation and a detail reload with service workers blocked so
+the hosting platform must supply SPA fallback. Validate it locally against a
+loopback production server; release automation runs it against the confirmed Void
+URL. See [deployment verification](docs/development/deployment.md).
 
 The automatic `network` fixture keeps local artifact requests real and aborts unmatched external requests. Register literal
 external responses with `network.respond(urlOrRegExp, { json: data })`; an optional third argument restricts the HTTP method.
@@ -165,7 +177,7 @@ a positive control. Cross-origin response fixtures expose `Vary` so the worker c
 
 ## Commands
 
-Run these from the repository root. The test and Storybook scripts explicitly select Node 22 and pnpm 10.29.3, matching the project pins.
+Run these from the repository root. The test and Storybook scripts explicitly select Node 24 and pnpm 10.29.3, matching the project pins.
 
 | Purpose                                                           | Command                                                                                                                                     |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -180,16 +192,16 @@ Run these from the repository root. The test and Storybook scripts explicitly se
 | One E2E case                                                      | `vp run test:e2e:prebuilt --grep 'case name'`                                                                                               |
 | Interactive E2E reruns against an existing artifact               | `vp run test:e2e:prebuilt --ui`                                                                                                             |
 | Environment suite                                                 | `vp run test:environment`                                                                                                                   |
-| One source file's units                                           | `vp env exec --node 22 --package-manager pnpm@10.29.3 vp -C apps/web test --project unit src/utils/index.ts`                                |
-| One integration file                                              | `vp env exec --node 22 --package-manager pnpm@10.29.3 vp -C apps/web test --project integration src/api.test.ts`                            |
-| One story file                                                    | `vp env exec --node 22 --package-manager pnpm@10.29.3 vp -C apps/web test --project storybook src/components/Spinner/Component.stories.tsx` |
+| One source file's units                                           | `vp env exec --node 24 --package-manager pnpm@10.29.3 vp -C apps/web test --project unit src/utils/index.ts`                                |
+| One integration file                                              | `vp env exec --node 24 --package-manager pnpm@10.29.3 vp -C apps/web test --project integration src/api.test.ts`                            |
+| One story file                                                    | `vp env exec --node 24 --package-manager pnpm@10.29.3 vp -C apps/web test --project storybook src/components/Spinner/Component.stories.tsx` |
 | One case                                                          | Add `-t 'case name'` to the relevant file/project command                                                                                   |
 | Watch application tests                                           | `vp run test:watch`                                                                                                                         |
-| Watch one type                                                    | `vp env exec --node 22 --package-manager pnpm@10.29.3 vp -C apps/web test watch --project unit`, `integration`, or `storybook`              |
+| Watch one type                                                    | `vp env exec --node 24 --package-manager pnpm@10.29.3 vp -C apps/web test watch --project unit`, `integration`, or `storybook`              |
 | Application coverage                                              | `vp run test:coverage`                                                                                                                      |
 | Storybook development on port 6006                                | `vp run storybook`                                                                                                                          |
 | Storybook static build                                            | `vp run storybook:build`                                                                                                                    |
-| Install the pinned Playwright Chromium browser                    | `vp env exec --node 22 --package-manager pnpm@10.29.3 vp exec --filter @rick-and-morty-platform/web playwright install chromium`            |
+| Install the pinned Playwright Chromium browser                    | `vp env exec --node 24 --package-manager pnpm@10.29.3 vp exec --filter @rick-and-morty-platform/web playwright install chromium`            |
 | Environment suite without Node or pnpm                            | `bash scripts/test-environment.sh`                                                                                                          |
 | Native environment suite inside the flake shell                   | `devenv test`                                                                                                                               |
 | One environment case                                              | `nix develop --impure --no-update-lock-file --command bash tests/environment/<behavior>.test.sh`                                            |
@@ -200,7 +212,7 @@ workspace scripts invoke the runner through an explicit Vite+ environment. Keep 
 
 `vp test` invokes Vitest directly. Use `vp run test` for the combined root suite. Scripts use the global CLI path supplied in
 `VP_CLI_BIN`, so invoke them through the global Vite+ CLI. Explicit runtime and package-manager selection also keeps
-commands on Node 22 when a contributor has enabled Vite+ system-first mode. The environment wrapper works from other
+commands on Node 24 when a contributor has enabled Vite+ system-first mode. The environment wrapper works from other
 working directories, selects the root, and checks the native entry point before entering the shell. Native flake tests do
 not offer case-name filtering; select their case file instead. Environment tests have no watch mode or coverage.
 
@@ -223,7 +235,7 @@ builder options, `.storybook/vite.config.ts` isolates the builder from the app c
 Vite+ 1.0.0 supplies Vitest 5.0.1. Test imports use Vite+ entry points, including `vite-plus/test/importMeta` in the web
 TypeScript configuration. The workspace override pins transitive Vitest to 5.0.1. Coverage and browser adapter packages
 are exact-pinned to that version. Storybook, its React/Vite framework, and its Vitest addon are exact-pinned to 10.6.1;
-Playwright is exact-pinned to 1.63.0. Its `playwright/test` entry point supplies Playwright Test without adding `@playwright/test`. Node declarations for E2E infrastructure are exact-pinned to `@types/node` 22.20.5. The obsolete optional `@vitest/runner` peer is not installed. No jsdom is adopted.
+Playwright is exact-pinned to 1.63.0. Its `playwright/test` entry point supplies Playwright Test without adding `@playwright/test`. Node declarations for E2E infrastructure are exact-pinned to `@types/node` 24.19.1. The obsolete optional `@vitest/runner` peer is not installed. No jsdom is adopted.
 
 After `vp install`, provision Chromium with the documented command. On supported Linux systems missing browser libraries,
 use the local Playwright CLI's `install-deps chromium` command to install those OS dependencies. Browser packages and binaries

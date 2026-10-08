@@ -50,3 +50,8 @@ devenv.local.yaml
 coverage/
 storybook-static/
 test-results/
+
+# Generated Void runtime state and deployment metadata
+.void/
+.wrangler/
+.void-wrangler.jsonc

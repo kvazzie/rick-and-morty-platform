@@ -64,8 +64,8 @@ Open a new shell after installation. Follow the
 [live Nixpkgs Vite+ packaging search](https://github.com/NixOS/nixpkgs/issues?q=%22vite%2B%22)
 for native packaging progress.
 
-Vite+ selects Node 22 from `.node-version` and the pinned `pnpm@10.29.3` from `package.json`.
-Node 22.22.1 or later in the 22.x line supports staged checks. Enable Vite+'s environment management,
+Vite+ selects Node 24 from `.node-version` and the pinned `pnpm@10.29.3` from `package.json`.
+Void requires Node 24.21.0 or later in the 24.x line. Enable Vite+'s environment management,
 then install dependencies and run commands from the repository root:
 
 ```sh
@@ -147,3 +147,8 @@ A checked version PR lands on `dev` before a short-lived promotion PR brings `de
 into `main`. After the promoted commit passes CI, automation creates its `v<version>`
 tag and GitHub release. Every workspace stays private, and no workflow publishes to npm.
 See [release operation](docs/development/releases.md) for dry runs and branch requirements.
+
+After release, CI deploys the validated browser artifact through Void as a static
+SPA and checks the public character-browsing flow. See
+[deployment setup](docs/development/deployment.md) for Cloudflare account setup,
+`CLOUDFLARE_API_TOKEN`, account variables, and the live smoke-check command.

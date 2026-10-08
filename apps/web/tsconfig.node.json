@@ -21,5 +21,12 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["vite.config.ts", "pwa-assets.config.ts", "hero.ts", ".storybook/main.ts", ".storybook/vite.config.ts"]
+  "include": [
+    "vite.config.ts",
+    "void.config.ts",
+    "pwa-assets.config.ts",
+    "hero.ts",
+    ".storybook/main.ts",
+    ".storybook/vite.config.ts"
+  ]
 }

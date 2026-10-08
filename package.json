@@ -26,9 +26,10 @@
     "storybook:build": "vp run --filter @rick-and-morty-platform/web storybook:build",
     "test:e2e": "vp run --no-cache --filter @rick-and-morty-platform/web test:e2e",
     "test:e2e:prebuilt": "vp run --no-cache --filter @rick-and-morty-platform/web test:e2e:prebuilt",
-    "changeset": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 -- vp exec changeset",
-    "release:version": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 -- node scripts/version-release.mjs",
-    "release:publish": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 22 --package-manager pnpm@10.29.3 -- node scripts/create-release.mjs"
+    "test:deployment": "vp run --no-cache --filter @rick-and-morty-platform/web test:deployment",
+    "changeset": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 24 --package-manager pnpm@10.29.3 -- vp exec changeset",
+    "release:version": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 24 --package-manager pnpm@10.29.3 -- node scripts/version-release.mjs",
+    "release:publish": "\"${VP_CLI_BIN:?Run through the global Vite+ CLI}\" env exec --node 24 --package-manager pnpm@10.29.3 -- node scripts/create-release.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
@@ -37,7 +38,7 @@
     "vite-plus": "catalog:"
   },
   "engines": {
-    "node": "^22.22.1"
+    "node": "^24.21.0"
   },
   "packageManager": "pnpm@10.29.3"
 }
