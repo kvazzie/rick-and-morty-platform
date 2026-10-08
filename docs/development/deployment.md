@@ -28,11 +28,11 @@ account, not a self-hosted Void platform or Workers for Platforms subscription.
 Configure these repository Actions settings before promoting the first release
 to `main`:
 
-| GitHub Actions setting                  | Value                                                                                      |
-| --------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Secret `CLOUDFLARE_API_TOKEN`           | Deployment token with Account / Workers Scripts / Edit, scoped to your chosen account      |
-| Variable `CLOUDFLARE_ACCOUNT_ID`        | The chosen Cloudflare account ID                                                           |
-| Variable `CLOUDFLARE_WORKERS_SUBDOMAIN` | That account's workers.dev subdomain, such as `your-account` or `your-account.workers.dev` |
+| GitHub Actions setting                  | Value                                                                                                                       |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Secret `CLOUDFLARE_API_TOKEN`           | Bootstrap token with Workers product-level Admin in your chosen account; replace with Editor for this Worker after creation |
+| Variable `CLOUDFLARE_ACCOUNT_ID`        | The chosen Cloudflare account ID                                                                                            |
+| Variable `CLOUDFLARE_WORKERS_SUBDOMAIN` | That account's workers.dev subdomain, such as `your-account` or `your-account.workers.dev`                                  |
 
 1. Create or sign into your Cloudflare account. Copy its account ID using
    [Cloudflare's account ID instructions](https://developers.cloudflare.com/fundamentals/setup/find-account-and-zone-ids/).
@@ -41,12 +41,35 @@ to `main`:
    The application's public URL will be
    `https://rick-and-morty-platform.<account-subdomain>.workers.dev`.
 3. [Create a custom API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
-   with Account / Workers Scripts / Edit and Account Resources restricted to
-   that account. This static deployment has no database, storage, queue, AI,
-   or email bindings and needs no permissions for those products.
+   with the Workers **Admin** role at the **Workers product** scope, restricted
+   to that account, for the first deployment. Set a short expiration that covers
+   the planned first release. Creating a Worker requires product-level Admin;
+   Editor cannot create it, and a per-Worker grant cannot target it yet.
+   This static deployment needs no database, storage, queue, AI, email, or zone
+   permissions.
 4. In GitHub, open this repository's Settings > Secrets and variables > Actions.
    Save the token as the secret above and the account ID and subdomain as
    variables. Keep the token out of chat, source files, and issue comments.
+
+Void 0.26.0's static deployment uses Cloudflare's `cf` uploader. It first tries
+to upload a version and falls back to `cf deploy --prebuilt` when the Worker
+does not exist. That bootstrap creates the Worker; CI has no separate creation
+step. Some API endpoint references still list the legacy Workers Scripts Write
+permission. Use the current [Workers roles and permissions](https://developers.cloudflare.com/workers/authorization/workers/)
+requirements above rather than relying on that legacy label for creation.
+
+After the first `main` deployment and public smoke check succeed:
+
+1. Create a replacement token with Workers **Editor**, scoped to the existing
+   `rick-and-morty-platform` Worker in the chosen account.
+2. Replace the GitHub `CLOUDFLARE_API_TOKEN` secret with this token.
+3. Revoke the bootstrap Admin token in Cloudflare. Use the Editor token for
+   subsequent deployments. If the Worker is deleted, repeat the Admin bootstrap
+   before attempting to deploy it again.
+
+Editor permits reading, updating, and deploying versions of the existing Worker.
+Register the account's workers.dev subdomain beforehand as described above; the
+workflow does not create an account subdomain or configure zone routes.
 
 Browser sign-in is optional for local account inspection:
 
